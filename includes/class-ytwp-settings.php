@@ -44,6 +44,7 @@ class YTWP_Settings {
 			'channel_id'              => '',
 			'anthropic_api_key'       => '',
 			'anthropic_model'         => 'claude-haiku-4-5',
+			'anthropic_workspace_id'  => '',
 			'youtube_api_key'         => '',
 			'google_client_id'        => '',
 			'google_client_secret'    => '',
@@ -217,6 +218,7 @@ class YTWP_Settings {
 		$text_keys = array(
 			'channel_id',
 			'anthropic_model',
+			'anthropic_workspace_id',
 			'google_client_id',
 			'caption_language',
 			'acf_body_field',

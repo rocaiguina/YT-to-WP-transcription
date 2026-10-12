@@ -170,6 +170,13 @@ class YTWP_Admin {
 						</td>
 					</tr>
 					<tr>
+						<th scope="row"><label for="ytwp_anthropic_workspace_id"><?php esc_html_e( 'Anthropic workspace id', 'yt-to-wp-transcription' ); ?></label></th>
+						<td>
+							<input type="text" class="regular-text code" id="ytwp_anthropic_workspace_id" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[anthropic_workspace_id]" value="<?php echo esc_attr( $settings['anthropic_workspace_id'] ); ?>" />
+							<p class="description"><?php esc_html_e( 'Only needed when your key belongs to the whole organization rather than one workspace. If the API answers that the key is not scoped to a workspace, paste the workspace id here, or create a key inside a workspace instead.', 'yt-to-wp-transcription' ); ?></p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row"><label for="ytwp_youtube_api_key"><?php esc_html_e( 'YouTube API key', 'yt-to-wp-transcription' ); ?></label></th>
 						<td>
 							<input type="password" class="regular-text" id="ytwp_youtube_api_key" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[youtube_api_key]" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( self::secret_placeholder( $settings['youtube_api_key'] ) ); ?>" />

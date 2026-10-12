@@ -57,15 +57,26 @@ class YTWP_Claude {
 			),
 		);
 
+		$headers = array(
+			'content-type'      => 'application/json',
+			'x-api-key'         => $api_key,
+			'anthropic-version' => self::API_VERSION,
+		);
+
+		// An organization-wide key is not tied to a workspace, so the API
+		// rejects it unless the request names the workspace to bill and
+		// scope to. A workspace-scoped key carries that itself and needs
+		// no header, which is why this stays optional.
+		$workspace = trim( (string) YTWP_Settings::get( 'anthropic_workspace_id', '' ) );
+		if ( '' !== $workspace ) {
+			$headers['anthropic-workspace-id'] = $workspace;
+		}
+
 		$response = wp_remote_post(
 			self::ENDPOINT,
 			array(
 				'timeout' => self::TIMEOUT,
-				'headers' => array(
-					'content-type'      => 'application/json',
-					'x-api-key'         => $api_key,
-					'anthropic-version' => self::API_VERSION,
-				),
+				'headers' => $headers,
 				'body'    => wp_json_encode( $payload ),
 			)
 		);

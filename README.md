@@ -66,6 +66,7 @@ Everything lives under **Settings → YT Transcription**.
 | Key | Where it comes from |
 |---|---|
 | Anthropic API key | console.anthropic.com |
+| Anthropic workspace id | Only when the key belongs to the whole organization rather than one workspace |
 | YouTube API key | Google Cloud Console, Credentials, API key |
 
 Keys are stored in the WordPress options table. Leave a key box blank when
