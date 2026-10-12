@@ -103,6 +103,25 @@ class YTWP_Admin {
 				<?php esc_html_e( 'Watches a YouTube channel and turns each upload into a draft post carrying an edited transcript. Nothing is ever published automatically.', 'yt-to-wp-transcription' ); ?>
 			</p>
 
+			<h2 class="title"><?php esc_html_e( 'Setup status', 'yt-to-wp-transcription' ); ?></h2>
+			<table class="widefat striped" style="max-width:48em">
+				<tbody>
+				<?php foreach ( YTWP_Settings::readiness() as $item ) : ?>
+					<tr>
+						<td style="width:14em"><strong><?php echo esc_html( $item['label'] ); ?></strong></td>
+						<td style="width:7em">
+							<?php if ( $item['ready'] ) : ?>
+								<span style="color:#008a20">&#10003; <?php esc_html_e( 'Ready', 'yt-to-wp-transcription' ); ?></span>
+							<?php else : ?>
+								<span style="color:#b32d2e">&#10007; <?php esc_html_e( 'Missing', 'yt-to-wp-transcription' ); ?></span>
+							<?php endif; ?>
+						</td>
+						<td><?php echo $item['ready'] ? '' : esc_html( $item['hint'] ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+
 			<form method="post" action="options.php">
 				<?php settings_fields( YTWP_Settings::GROUP ); ?>
 
@@ -345,16 +364,20 @@ class YTWP_Admin {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Video queue', 'yt-to-wp-transcription' ); ?></h1>
 
-			<?php if ( ! YTWP_Settings::is_configured() ) : ?>
+			<?php
+			$missing = YTWP_Settings::missing();
+			if ( ! empty( $missing ) ) :
+				?>
 				<div class="notice notice-warning">
 					<p>
 						<?php
 						printf(
-							/* translators: %s: link to the settings screen. */
-							esc_html__( 'Some credentials are still missing. %s', 'yt-to-wp-transcription' ),
-							'<a href="' . esc_url( admin_url( 'options-general.php?page=' . self::SETTINGS_SLUG ) ) . '">' . esc_html__( 'Finish the setup', 'yt-to-wp-transcription' ) . '</a>'
+							/* translators: %s: comma separated list of missing credentials. */
+							esc_html__( 'Still missing: %s.', 'yt-to-wp-transcription' ),
+							esc_html( implode( ', ', $missing ) )
 						);
 						?>
+						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::SETTINGS_SLUG ) ); ?>"><?php esc_html_e( 'Finish the setup', 'yt-to-wp-transcription' ); ?></a>
 					</p>
 				</div>
 			<?php endif; ?>

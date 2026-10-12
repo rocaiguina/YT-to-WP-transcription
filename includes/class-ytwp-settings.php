@@ -104,17 +104,71 @@ class YTWP_Settings {
 	}
 
 	/**
+	 * Everything the worker needs, and whether each one is present. Keyed so
+	 * the admin screens can name what is missing instead of saying only that
+	 * something is.
+	 *
+	 * @return array<string,array{label:string,ready:bool,hint:string}>
+	 */
+	public static function readiness() {
+		$all = self::all();
+
+		return array(
+			'channel_id'           => array(
+				'label' => __( 'Channel id', 'yt-to-wp-transcription' ),
+				'ready' => '' !== trim( (string) $all['channel_id'] ),
+				'hint'  => __( 'Settings screen, Channel section.', 'yt-to-wp-transcription' ),
+			),
+			'youtube_api_key'      => array(
+				'label' => __( 'YouTube API key', 'yt-to-wp-transcription' ),
+				'ready' => '' !== trim( (string) $all['youtube_api_key'] ),
+				'hint'  => __( 'Settings screen, API keys section.', 'yt-to-wp-transcription' ),
+			),
+			'anthropic_api_key'    => array(
+				'label' => __( 'Anthropic API key', 'yt-to-wp-transcription' ),
+				'ready' => '' !== trim( (string) $all['anthropic_api_key'] ),
+				'hint'  => __( 'Settings screen, API keys section.', 'yt-to-wp-transcription' ),
+			),
+			'google_client_id'     => array(
+				'label' => __( 'Google client id', 'yt-to-wp-transcription' ),
+				'ready' => '' !== trim( (string) $all['google_client_id'] ),
+				'hint'  => __( 'Settings screen, YouTube account section.', 'yt-to-wp-transcription' ),
+			),
+			'google_client_secret' => array(
+				'label' => __( 'Google client secret', 'yt-to-wp-transcription' ),
+				'ready' => '' !== trim( (string) $all['google_client_secret'] ),
+				'hint'  => __( 'Settings screen, YouTube account section.', 'yt-to-wp-transcription' ),
+			),
+			'google_refresh_token' => array(
+				'label' => __( 'YouTube connection', 'yt-to-wp-transcription' ),
+				'ready' => '' !== trim( (string) $all['google_refresh_token'] ),
+				'hint'  => __( 'Press "Connect to YouTube" on the settings screen and sign in with the account that owns the channel.', 'yt-to-wp-transcription' ),
+			),
+		);
+	}
+
+	/**
+	 * The labels of whatever is still missing.
+	 *
+	 * @return string[]
+	 */
+	public static function missing() {
+		$missing = array();
+		foreach ( self::readiness() as $item ) {
+			if ( ! $item['ready'] ) {
+				$missing[] = $item['label'];
+			}
+		}
+		return $missing;
+	}
+
+	/**
 	 * True when every credential the worker needs is present.
 	 *
 	 * @return bool
 	 */
 	public static function is_configured() {
-		foreach ( array( 'channel_id', 'anthropic_api_key', 'youtube_api_key' ) as $key ) {
-			if ( empty( self::get( $key ) ) ) {
-				return false;
-			}
-		}
-		return ! empty( self::get( 'google_refresh_token' ) );
+		return array() === self::missing();
 	}
 
 	/**
