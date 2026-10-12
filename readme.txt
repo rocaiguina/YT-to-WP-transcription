@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,9 @@ No. The article goes into the post content. If your theme renders from ACF field
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
 == Changelog ==
+
+= 0.1.1 =
+* The buttons on the queue screen now work before "Run automatically" is switched on. That setting gates the scheduled jobs only, which is what it was always meant to do: the buttons exist to prove the setup works before the automation is trusted with it.
 
 = 0.1.0 =
 * First release.

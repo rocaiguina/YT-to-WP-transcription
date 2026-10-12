@@ -25,8 +25,33 @@ class YTWP_Worker {
 	 * Hook the cron jobs.
 	 */
 	public static function init() {
-		add_action( YTWP_CRON_SCAN, array( __CLASS__, 'scan' ) );
-		add_action( YTWP_CRON_WORK, array( __CLASS__, 'process_next' ) );
+		add_action( YTWP_CRON_SCAN, array( __CLASS__, 'cron_scan' ) );
+		add_action( YTWP_CRON_WORK, array( __CLASS__, 'cron_process' ) );
+	}
+
+	/**
+	 * The scheduled channel check.
+	 *
+	 * "Run automatically" gates the cron jobs only. The buttons on the queue
+	 * screen call scan() and process_next() directly, because their whole
+	 * purpose is to prove the setup works before the automation is switched
+	 * on — gating them behind the same setting would make that impossible.
+	 */
+	public static function cron_scan() {
+		if ( ! YTWP_Settings::get( 'enabled' ) ) {
+			return;
+		}
+		self::scan();
+	}
+
+	/**
+	 * The scheduled worker run.
+	 */
+	public static function cron_process() {
+		if ( ! YTWP_Settings::get( 'enabled' ) ) {
+			return;
+		}
+		self::process_next();
 	}
 
 	/**
@@ -38,10 +63,6 @@ class YTWP_Worker {
 	 * @return array|WP_Error Counts.
 	 */
 	public static function scan( $max_pages = 2 ) {
-		if ( ! YTWP_Settings::get( 'enabled' ) ) {
-			return new WP_Error( 'ytwp_disabled', __( 'The plugin is switched off.', 'yt-to-wp-transcription' ) );
-		}
-
 		$channel_id = (string) YTWP_Settings::get( 'channel_id', '' );
 		if ( '' === $channel_id ) {
 			return new WP_Error( 'ytwp_no_channel', __( 'No channel id is saved.', 'yt-to-wp-transcription' ) );
@@ -85,10 +106,6 @@ class YTWP_Worker {
 	 * @return array|WP_Error Outcome.
 	 */
 	public static function process_next() {
-		if ( ! YTWP_Settings::get( 'enabled' ) ) {
-			return new WP_Error( 'ytwp_disabled', __( 'The plugin is switched off.', 'yt-to-wp-transcription' ) );
-		}
-
 		// A slow video must not have a second run pile in behind it.
 		if ( get_transient( self::LOCK ) ) {
 			return new WP_Error( 'ytwp_busy', __( 'Another run is still working.', 'yt-to-wp-transcription' ) );
