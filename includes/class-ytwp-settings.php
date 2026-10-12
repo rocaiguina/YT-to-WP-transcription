@@ -242,6 +242,15 @@ class YTWP_Settings {
 			}
 		}
 
+		// register_setting() hooks this callback onto sanitize_option_{option},
+		// which WordPress runs on every write to the option — not just on the
+		// settings form. The refresh token has no form field, so without this
+		// it was dropped the moment the OAuth callback tried to store it, and
+		// the connection silently never completed.
+		if ( array_key_exists( 'google_refresh_token', $input ) ) {
+			$clean['google_refresh_token'] = trim( sanitize_text_field( wp_unslash( $input['google_refresh_token'] ) ) );
+		}
+
 		$int_keys = array( 'post_category', 'post_author', 'min_transcript_words', 'short_max_seconds' );
 		foreach ( $int_keys as $key ) {
 			if ( isset( $input[ $key ] ) ) {

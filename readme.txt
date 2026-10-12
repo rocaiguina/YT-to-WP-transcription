@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.2
+Stable tag: 0.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,9 @@ No. The article goes into the post content. If your theme renders from ACF field
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
 == Changelog ==
+
+= 0.1.3 =
+* Fixed: connecting to YouTube appeared to succeed but never stored the refresh token, so the connection always read as missing. register_setting() hooks the sanitize callback onto every write of the option, not just the settings form, and the token was being stripped there because it has no form field of its own.
 
 = 0.1.2 =
 * The settings screen now opens with a setup status table showing which credential is ready and which is missing, and the queue warning names what is missing instead of only saying that something is.
