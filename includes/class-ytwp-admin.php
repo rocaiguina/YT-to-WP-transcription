@@ -291,6 +291,27 @@ class YTWP_Admin {
 					</tr>
 				</table>
 
+				<h2 class="title"><?php esc_html_e( 'Wording inside published posts', 'yt-to-wp-transcription' ); ?></h2>
+				<p class="description">
+					<?php esc_html_e( 'These headings appear in the post itself, so they belong in the language your audience reads, which has nothing to do with the language of this admin screen. They start out matching the caption language above.', 'yt-to-wp-transcription' ); ?>
+				</p>
+				<table class="form-table" role="presentation">
+					<?php
+					$label_fields = array(
+						'label_key_points' => __( 'Key points heading', 'yt-to-wp-transcription' ),
+						'label_transcript' => __( 'Transcript heading', 'yt-to-wp-transcription' ),
+						'label_sources'    => __( 'Sources heading', 'yt-to-wp-transcription' ),
+						'label_watch'      => __( 'Link to the video', 'yt-to-wp-transcription' ),
+					);
+					foreach ( $label_fields as $key => $label ) :
+						?>
+						<tr>
+							<th scope="row"><label for="ytwp_<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label></th>
+							<td><input type="text" class="regular-text" id="ytwp_<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( $settings[ $key ] ); ?>" /></td>
+						</tr>
+					<?php endforeach; ?>
+				</table>
+
 				<h2 class="title"><?php esc_html_e( 'Advanced Custom Fields (optional)', 'yt-to-wp-transcription' ); ?></h2>
 				<p class="description">
 					<?php esc_html_e( 'The article always goes into the post content. If your theme renders from ACF fields instead, name them here and the plugin will fill those too. Leave blank to skip.', 'yt-to-wp-transcription' ); ?>
@@ -466,9 +487,12 @@ class YTWP_Admin {
 							<td><?php echo esc_html( self::format_length( (int) $row->duration_seconds ) ); ?></td>
 							<td>
 								<?php echo esc_html( self::status_label( $row->status, $row->kind ) ); ?>
-								<?php if ( YTWP_Store::STATUS_ERROR === $row->status ) : ?>
+								<?php if ( YTWP_Store::STATUS_WORKING !== $row->status ) : ?>
 									<br />
-									<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ytwp_requeue&video=' . rawurlencode( $row->video_id ) ), 'ytwp_requeue_' . $row->video_id ) ); ?>"><?php esc_html_e( 'Try again', 'yt-to-wp-transcription' ); ?></a>
+									<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ytwp_requeue&video=' . rawurlencode( $row->video_id ) ), 'ytwp_requeue_' . $row->video_id ) ); ?>"><?php esc_html_e( 'Run again', 'yt-to-wp-transcription' ); ?></a>
+									<?php if ( $row->post_id ) : ?>
+										<br /><span class="description"><?php esc_html_e( 'Delete the draft first, or it will be skipped.', 'yt-to-wp-transcription' ); ?></span>
+									<?php endif; ?>
 								<?php endif; ?>
 							</td>
 							<td>

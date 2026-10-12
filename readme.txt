@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.4
+Stable tag: 0.1.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,10 @@ No. The article goes into the post content. If your theme renders from ACF field
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
 == Changelog ==
+
+= 0.1.5 =
+* Fixed: the headings inside published posts were always English, because they were written as interface strings. They now follow the caption language, with Spanish, Portuguese and French shipped, and can be overwritten on the settings screen.
+* Any video in the queue can be run again, not only a failed one.
 
 = 0.1.4 =
 * Added an optional Anthropic workspace id. An API key that belongs to the whole organization rather than one workspace is rejected until the request names a workspace, so the plugin now sends that header when the id is filled in.

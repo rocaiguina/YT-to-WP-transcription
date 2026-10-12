@@ -63,7 +63,55 @@ class YTWP_Settings {
 			'acf_sources_label_field' => '',
 			'acf_source_link_fields'  => '',
 			'editorial_notes'         => '',
+			// These appear inside the published post, so they belong to the
+			// publication's language, not to the WordPress admin locale.
+			'label_key_points'        => '',
+			'label_transcript'        => '',
+			'label_sources'           => '',
+			'label_watch'             => '',
 		);
+	}
+
+	/**
+	 * Wording for the headings that appear inside published posts, for the
+	 * languages shipped with the plugin. The caption language is what the
+	 * post will be written in, so it picks these; anything not listed falls
+	 * back to English and can be overwritten on the settings screen.
+	 *
+	 * @param string $language Two-letter language code.
+	 * @return array<string,string>
+	 */
+	public static function default_labels( $language = 'en' ) {
+		$packs = array(
+			'en' => array(
+				'label_key_points' => 'The key points',
+				'label_transcript' => 'Transcript',
+				'label_sources'    => 'Sources',
+				'label_watch'      => 'Watch the full video:',
+			),
+			'es' => array(
+				'label_key_points' => 'Lo importante',
+				'label_transcript' => 'Transcripción del episodio',
+				'label_sources'    => 'Fuentes',
+				'label_watch'      => 'Mira el video completo:',
+			),
+			'pt' => array(
+				'label_key_points' => 'O essencial',
+				'label_transcript' => 'Transcrição',
+				'label_sources'    => 'Fontes',
+				'label_watch'      => 'Assista ao vídeo completo:',
+			),
+			'fr' => array(
+				'label_key_points' => 'L\'essentiel',
+				'label_transcript' => 'Transcription',
+				'label_sources'    => 'Sources',
+				'label_watch'      => 'Regarder la vidéo complète :',
+			),
+		);
+
+		$code = strtolower( substr( (string) $language, 0, 2 ) );
+
+		return isset( $packs[ $code ] ) ? $packs[ $code ] : $packs['en'];
 	}
 
 	/**
@@ -76,7 +124,19 @@ class YTWP_Settings {
 		if ( ! is_array( $saved ) ) {
 			$saved = array();
 		}
-		return wp_parse_args( $saved, self::defaults() );
+
+		$all = wp_parse_args( $saved, self::defaults() );
+
+		// A heading the admin never set follows the caption language, so a
+		// Spanish channel does not end up with English headings inside
+		// Spanish articles.
+		foreach ( self::default_labels( $all['caption_language'] ) as $key => $text ) {
+			if ( '' === trim( (string) $all[ $key ] ) ) {
+				$all[ $key ] = $text;
+			}
+		}
+
+		return $all;
 	}
 
 	/**
@@ -226,6 +286,10 @@ class YTWP_Settings {
 			'acf_video_field',
 			'acf_sources_label_field',
 			'acf_source_link_fields',
+			'label_key_points',
+			'label_transcript',
+			'label_sources',
+			'label_watch',
 		);
 		foreach ( $text_keys as $key ) {
 			if ( isset( $input[ $key ] ) ) {

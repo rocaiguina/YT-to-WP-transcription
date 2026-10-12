@@ -94,7 +94,7 @@ class YTWP_Publisher {
 		$out .= self::watch_link( $video );
 
 		if ( ! empty( $draft['key_points'] ) ) {
-			$out .= "\n<h2>" . esc_html__( 'The key points', 'yt-to-wp-transcription' ) . "</h2>\n<ul>\n";
+			$out .= "\n<h2>" . esc_html( self::label( 'label_key_points' ) ) . "</h2>\n<ul>\n";
 			foreach ( $draft['key_points'] as $point ) {
 				$out .= '<li>' . esc_html( $point ) . "</li>\n";
 			}
@@ -102,7 +102,7 @@ class YTWP_Publisher {
 		}
 
 		if ( ! empty( $draft['sections'] ) ) {
-			$out .= "\n<h2>" . esc_html__( 'Transcript', 'yt-to-wp-transcription' ) . "</h2>\n";
+			$out .= "\n<h2>" . esc_html( self::label( 'label_transcript' ) ) . "</h2>\n";
 
 			foreach ( $draft['sections'] as $section ) {
 				$heading   = isset( $section['heading'] ) ? $section['heading'] : '';
@@ -122,7 +122,7 @@ class YTWP_Publisher {
 
 		$sources = self::usable_sources( $draft );
 		if ( ! empty( $sources ) ) {
-			$out .= "\n<h2>" . esc_html__( 'Sources', 'yt-to-wp-transcription' ) . "</h2>\n<ul>\n";
+			$out .= "\n<h2>" . esc_html( self::label( 'label_sources' ) ) . "</h2>\n<ul>\n";
 			foreach ( $sources as $source ) {
 				$label = trim( $source['title'] );
 				if ( '' !== trim( $source['outlet'] ) ) {
@@ -172,6 +172,24 @@ class YTWP_Publisher {
 	}
 
 	/**
+	 * A heading as it should read in the published post. These are settings
+	 * rather than translated interface strings: the post is written in the
+	 * language of the video, which has nothing to do with the language the
+	 * WordPress admin happens to be in.
+	 *
+	 * @param string $key Setting name.
+	 * @return string
+	 */
+	private static function label( $key ) {
+		$value = trim( (string) YTWP_Settings::get( $key, '' ) );
+		if ( '' !== $value ) {
+			return $value;
+		}
+		$pack = YTWP_Settings::default_labels( YTWP_Settings::get( 'caption_language', 'en' ) );
+		return isset( $pack[ $key ] ) ? $pack[ $key ] : '';
+	}
+
+	/**
 	 * A line pointing at the original video.
 	 *
 	 * @param array $video Video data.
@@ -180,11 +198,9 @@ class YTWP_Publisher {
 	private static function watch_link( array $video ) {
 		$url = self::video_url( $video['video_id'] );
 
-		return "\n<p>" . sprintf(
-			/* translators: %s: link to the video on YouTube. */
-			esc_html__( 'Watch the full video: %s', 'yt-to-wp-transcription' ),
-			'<a href="' . esc_url( $url ) . '" rel="noopener noreferrer" target="_blank">' . esc_html( $url ) . '</a>'
-		) . "</p>\n";
+		return "\n<p>" . esc_html( self::label( 'label_watch' ) ) . ' '
+			. '<a href="' . esc_url( $url ) . '" rel="noopener noreferrer" target="_blank">' . esc_html( $url ) . '</a>'
+			. "</p>\n";
 	}
 
 	/**
@@ -273,7 +289,7 @@ class YTWP_Publisher {
 
 		$label_field = (string) YTWP_Settings::get( 'acf_sources_label_field', '' );
 		if ( '' !== $label_field && ! empty( $sources ) ) {
-			update_field( $label_field, __( 'Sources', 'yt-to-wp-transcription' ), $post_id );
+			update_field( $label_field, self::label( 'label_sources' ), $post_id );
 		}
 
 		// ACF link fields expect {title, url}. Sites usually have a fixed
