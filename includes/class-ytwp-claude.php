@@ -218,13 +218,53 @@ class YTWP_Claude {
 	}
 
 	/**
+	 * The language the article must be written in, named in full. A code
+	 * like "es" is easy for a model to skim past; the name is not.
+	 *
+	 * @param string $code Two-letter language code.
+	 * @return string
+	 */
+	public static function language_name( $code ) {
+		$names = array(
+			'en' => 'English',
+			'es' => 'Spanish',
+			'pt' => 'Portuguese',
+			'fr' => 'French',
+			'it' => 'Italian',
+			'de' => 'German',
+			'ca' => 'Catalan',
+			'gl' => 'Galician',
+			'nl' => 'Dutch',
+			'ro' => 'Romanian',
+			'pl' => 'Polish',
+			'tr' => 'Turkish',
+			'ja' => 'Japanese',
+			'ko' => 'Korean',
+			'zh' => 'Chinese',
+			'ar' => 'Arabic',
+			'hi' => 'Hindi',
+			'ru' => 'Russian',
+		);
+
+		$key = strtolower( substr( (string) $code, 0, 2 ) );
+
+		return isset( $names[ $key ] ) ? $names[ $key ] : $key;
+	}
+
+	/**
 	 * Editing rules. The transcript is the publisher's own recording, so the
 	 * task is to make it readable, never to rewrite or embellish it.
 	 *
 	 * @return string
 	 */
 	private static function system_prompt() {
-		$prompt = "You are a news editor preparing a published article from the transcript of a video the publication recorded itself. The spoken words are the journalist's own reporting. Your job is to make them readable, never to rewrite them or add anything they did not say.\n\n";
+		$language = self::language_name( YTWP_Settings::get( 'caption_language', 'en' ) );
+
+		$prompt  = "You are a news editor preparing a published article from the transcript of a video the publication recorded itself. The spoken words are the journalist's own reporting. Your job is to make them readable, never to rewrite them or add anything they did not say.\n\n";
+
+		$prompt .= "LANGUAGE — THIS OVERRIDES EVERYTHING ELSE\n\n";
+		$prompt .= "The recording is in {$language} and the article is published in {$language}. Write every word you produce in {$language}: the headline, the lede, the key points, every section heading, every paragraph of the transcript, the source titles and the review notes.\n\n";
+		$prompt .= "Never translate. These are quotes from a real person speaking to their own audience, and translating them puts words in their mouth that they did not say. These instructions are written in English for convenience; that is not the language of the article. If you find yourself writing in English, you have made the single worst mistake available to you here.\n\n";
 
 		$prompt .= "EDITING RULES\n\n";
 		$prompt .= "1. Correct proper nouns, institutions and technical terms that speech recognition got wrong. Use the surrounding context to work out what was meant. Company names, place names and people's names are where these errors do the most damage.\n\n";
@@ -238,7 +278,7 @@ class YTWP_Claude {
 
 		$prompt .= "WHAT YOU WRITE YOURSELF\n\n";
 		$prompt .= "The headline, the lede and the key points are yours. Everything in the sections is the speaker, edited. The video description often lists the stories covered along with the outlet that reported each one: use it for the sources, and for nothing else.\n\n";
-		$prompt .= "Write in the same language the transcript is in.";
+		$prompt .= "Before you submit, reread what you wrote and confirm every field is in {$language}.";
 
 		$notes = trim( (string) YTWP_Settings::get( 'editorial_notes', '' ) );
 		if ( '' !== $notes ) {
@@ -258,8 +298,11 @@ class YTWP_Claude {
 	 */
 	private static function user_prompt( array $video, $transcript, $is_automatic ) {
 		$description = '' !== trim( $video['description'] ) ? $video['description'] : '(no description)';
+		$language    = self::language_name( YTWP_Settings::get( 'caption_language', 'en' ) );
 
 		$lines = array(
+			"WRITE THE ENTIRE ARTICLE IN {$language}. Do not translate the speaker.",
+			'',
 			'VIDEO TITLE: ' . $video['title'],
 			'PUBLISHED: ' . $video['published_at'],
 			'DURATION: ' . $video['duration_iso'],

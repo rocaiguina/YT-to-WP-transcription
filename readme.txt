@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.5
+Stable tag: 0.1.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,9 @@ No. The article goes into the post content. If your theme renders from ACF field
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
 == Changelog ==
+
+= 0.1.6 =
+* Fixed: articles were being translated into English instead of staying in the language of the recording. The editing instructions now name that language in full, lead with it, and forbid translating the speaker outright.
 
 = 0.1.5 =
 * Fixed: the headings inside published posts were always English, because they were written as interface strings. They now follow the caption language, with Spanish, Portuguese and French shipped, and can be overwritten on the settings screen.
