@@ -57,6 +57,7 @@ class YTWP_Settings {
 			'min_duration_minutes'    => 3,
 			'max_duration_minutes'    => 0,
 			'publish_short_clips'     => 1,
+			'skip_guest_episodes'     => 1,
 			'enabled'                 => 0,
 			'acf_body_field'          => '',
 			'acf_summary_field'       => '',
@@ -320,7 +321,7 @@ class YTWP_Settings {
 			}
 		}
 
-		foreach ( array( 'publish_short_clips', 'enabled' ) as $key ) {
+		foreach ( array( 'publish_short_clips', 'skip_guest_episodes', 'enabled' ) as $key ) {
 			$clean[ $key ] = empty( $input[ $key ] ) ? 0 : 1;
 		}
 

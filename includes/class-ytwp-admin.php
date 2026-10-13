@@ -247,6 +247,16 @@ class YTWP_Admin {
 						</td>
 					</tr>
 					<tr>
+						<th scope="row"><?php esc_html_e( 'Episodes with a guest', 'yt-to-wp-transcription' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[skip_guest_episodes]" value="1" <?php checked( $settings['skip_guest_episodes'], 1 ); ?> />
+								<?php esc_html_e( 'Skip any video where someone else speaks', 'yt-to-wp-transcription' ); ?>
+							</label>
+							<p class="description"><?php esc_html_e( 'An article is written in one voice. When a guest, co-host or panel takes a turn, writing it that way would put their sentences under the journalist\'s name. Only the transcript reveals this, so the video is read first and then passed over, and the queue records who else spoke.', 'yt-to-wp-transcription' ); ?></p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row"><?php esc_html_e( 'Videos outside the range', 'yt-to-wp-transcription' ); ?></th>
 						<td>
 							<label>
@@ -595,7 +605,9 @@ class YTWP_Admin {
 					? __( 'Drafted (clip)', 'yt-to-wp-transcription' )
 					: __( 'Drafted (transcript)', 'yt-to-wp-transcription' );
 			case YTWP_Store::STATUS_SKIPPED:
-				return __( 'Passed over', 'yt-to-wp-transcription' );
+				return 'guest' === $kind
+					? __( 'Passed over (guest)', 'yt-to-wp-transcription' )
+					: __( 'Passed over', 'yt-to-wp-transcription' );
 			case YTWP_Store::STATUS_ERROR:
 				return __( 'Failed', 'yt-to-wp-transcription' );
 			default:

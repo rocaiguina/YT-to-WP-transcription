@@ -290,6 +290,35 @@ class YTWP_Worker {
 			return self::fail( $row, $result );
 		}
 
+		// An episode with a guest is somebody else's words as much as the
+		// journalist's, so writing it up in his single voice would put their
+		// sentences under his name. Only the transcript can tell, which is
+		// why this is checked after the article comes back rather than from
+		// the title.
+		if ( YTWP_Settings::get( 'skip_guest_episodes' ) && empty( $result['draft']['single_speaker'] ) ) {
+			$others = array_filter( (array) $result['draft']['other_speakers'] );
+
+			YTWP_Store::set_status(
+				$video_id,
+				YTWP_Store::STATUS_SKIPPED,
+				array(
+					'kind' => 'guest',
+					'note' => $others
+						? sprintf(
+							/* translators: %s: comma separated names. */
+							__( 'Someone else speaks in this one: %s.', 'yt-to-wp-transcription' ),
+							implode( ', ', array_map( 'sanitize_text_field', $others ) )
+						)
+						: __( 'Someone other than the journalist speaks in this one.', 'yt-to-wp-transcription' ),
+				)
+			);
+
+			return array(
+				'status'   => 'skipped',
+				'video_id' => $video_id,
+			);
+		}
+
 		$post_id = YTWP_Publisher::create_article( $video, $result['draft'] );
 		if ( is_wp_error( $post_id ) ) {
 			return self::fail( $row, $post_id );

@@ -135,6 +135,11 @@ class YTWP_Claude {
 			'sources'      => isset( $input['sources'] ) && is_array( $input['sources'] ) ? $input['sources'] : array(),
 			'excluded'     => isset( $input['excluded'] ) && is_array( $input['excluded'] ) ? $input['excluded'] : array(),
 			'needs_review' => isset( $input['needs_review'] ) && is_array( $input['needs_review'] ) ? $input['needs_review'] : array(),
+			// Absent means "nobody said otherwise", and treating that as a
+			// solo episode keeps a missing field from silently binning a
+			// video that was fine.
+			'single_speaker' => ! isset( $input['single_speaker'] ) || (bool) $input['single_speaker'],
+			'other_speakers' => isset( $input['other_speakers'] ) && is_array( $input['other_speakers'] ) ? $input['other_speakers'] : array(),
 		);
 	}
 
@@ -152,7 +157,7 @@ class YTWP_Claude {
 			'input_schema' => array(
 				'type'                 => 'object',
 				'additionalProperties' => false,
-				'required'             => array( 'title', 'lede', 'key_points', 'sections', 'sources', 'excluded', 'needs_review' ),
+				'required'             => array( 'title', 'lede', 'key_points', 'sections', 'sources', 'excluded', 'needs_review', 'single_speaker', 'other_speakers' ),
 				'properties'           => array(
 					'title'        => array(
 						'type'        => 'string',
@@ -210,6 +215,15 @@ class YTWP_Claude {
 					'needs_review' => array(
 						'type'        => 'array',
 						'description' => 'Anything an editor must check before publishing.',
+						'items'       => array( 'type' => 'string' ),
+					),
+					'single_speaker' => array(
+						'type'        => 'boolean',
+						'description' => 'True when the journalist is the only person speaking. False when anyone else takes a turn: a guest, a co-host, a panel, an interviewee.',
+					),
+					'other_speakers' => array(
+						'type'        => 'array',
+						'description' => 'The names of anyone else who speaks, as best you can tell from the transcript. Empty when the journalist speaks alone.',
 						'items'       => array( 'type' => 'string' ),
 					),
 				),
@@ -286,7 +300,8 @@ class YTWP_Claude {
 		$prompt .= "- key_points: four to six single sentences carrying the concrete figures and names.\n";
 		$prompt .= "- sections: the body, one per story.\n";
 		$prompt .= "- sources: the outlets credited. The video description usually lists each story with the outlet that reported it; use it for this and nothing else.\n";
-		$prompt .= "- needs_review: what an editor must check before publishing. Names you could not resolve with confidence, figures that sound mistranscribed, and anything said about a named person.\n\n";
+		$prompt .= "- needs_review: what an editor must check before publishing. Names you could not resolve with confidence, figures that sound mistranscribed, and anything said about a named person.\n";
+		$prompt .= "- single_speaker and other_speakers: whether the journalist is the only person speaking. Set single_speaker to false the moment anyone else takes a turn - a guest, a co-host, a panel, someone being interviewed - and name them in other_speakers. Judge this from the transcript itself: someone being greeted by name and handed the floor, thanked for being there, or answering a question put to them. A name merely being discussed is not a second speaker. Fill these in honestly even when the article turned out well; what happens to the article afterwards is not your decision.\n\n";
 
 		$prompt .= "Before you submit, reread what you wrote. Confirm every field is in {$language}, that it reads as writing rather than speech, and that nothing appears in it that was not in the transcript.";
 
