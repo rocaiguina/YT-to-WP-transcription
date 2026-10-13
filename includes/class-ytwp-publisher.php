@@ -91,8 +91,6 @@ class YTWP_Publisher {
 			$out .= '<p>' . esc_html( $paragraph ) . "</p>\n";
 		}
 
-		$out .= self::watch_link( $video );
-
 		if ( ! empty( $draft['key_points'] ) ) {
 			$out .= "\n<h2>" . esc_html( self::label( 'label_key_points' ) ) . "</h2>\n<ul>\n";
 			foreach ( $draft['key_points'] as $point ) {
@@ -101,24 +99,22 @@ class YTWP_Publisher {
 			$out .= "</ul>\n";
 		}
 
-		if ( ! empty( $draft['sections'] ) ) {
-			$out .= "\n<h2>" . esc_html( self::label( 'label_transcript' ) ) . "</h2>\n";
+		// The body runs straight on from the opening. There is no heading
+		// announcing a transcript, because this is not one: it is the
+		// article covering the same stories.
+		foreach ( $draft['sections'] as $section ) {
+			$heading = isset( $section['heading'] ) ? $section['heading'] : '';
 
-			foreach ( $draft['sections'] as $section ) {
-				$heading   = isset( $section['heading'] ) ? $section['heading'] : '';
-				$timestamp = isset( $section['timestamp'] ) ? $section['timestamp'] : '';
+			if ( '' !== trim( $heading ) ) {
+				$out .= "\n<h2>" . esc_html( $heading ) . "</h2>\n";
+			}
 
-				$out .= "\n<h3>" . esc_html( $heading );
-				if ( '' !== $timestamp ) {
-					$out .= ' <span class="ytwp-timestamp">' . esc_html( $timestamp ) . '</span>';
-				}
-				$out .= "</h3>\n";
-
-				foreach ( ( isset( $section['paragraphs'] ) ? $section['paragraphs'] : array() ) as $paragraph ) {
-					$out .= '<p>' . esc_html( $paragraph ) . "</p>\n";
-				}
+			foreach ( ( isset( $section['paragraphs'] ) ? $section['paragraphs'] : array() ) as $paragraph ) {
+				$out .= '<p>' . esc_html( $paragraph ) . "</p>\n";
 			}
 		}
+
+		$out .= self::watch_link( $video );
 
 		$sources = self::usable_sources( $draft );
 		if ( ! empty( $sources ) ) {

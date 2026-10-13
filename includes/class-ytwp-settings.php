@@ -67,7 +67,6 @@ class YTWP_Settings {
 			// These appear inside the published post, so they belong to the
 			// publication's language, not to the WordPress admin locale.
 			'label_key_points'        => '',
-			'label_transcript'        => '',
 			'label_sources'           => '',
 			'label_watch'             => '',
 		);
@@ -86,25 +85,21 @@ class YTWP_Settings {
 		$packs = array(
 			'en' => array(
 				'label_key_points' => 'The key points',
-				'label_transcript' => 'Transcript',
 				'label_sources'    => 'Sources',
 				'label_watch'      => 'Watch the full video:',
 			),
 			'es' => array(
 				'label_key_points' => 'Lo importante',
-				'label_transcript' => 'Transcripción del episodio',
 				'label_sources'    => 'Fuentes',
 				'label_watch'      => 'Mira el video completo:',
 			),
 			'pt' => array(
 				'label_key_points' => 'O essencial',
-				'label_transcript' => 'Transcrição',
 				'label_sources'    => 'Fontes',
 				'label_watch'      => 'Assista ao vídeo completo:',
 			),
 			'fr' => array(
 				'label_key_points' => 'L\'essentiel',
-				'label_transcript' => 'Transcription',
 				'label_sources'    => 'Sources',
 				'label_watch'      => 'Regarder la vidéo complète :',
 			),
@@ -289,7 +284,6 @@ class YTWP_Settings {
 			'acf_source_link_fields',
 			'earliest_video_date',
 			'label_key_points',
-			'label_transcript',
 			'label_sources',
 			'label_watch',
 		);

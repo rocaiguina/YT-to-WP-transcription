@@ -306,7 +306,6 @@ class YTWP_Admin {
 					<?php
 					$label_fields = array(
 						'label_key_points' => __( 'Key points heading', 'yt-to-wp-transcription' ),
-						'label_transcript' => __( 'Transcript heading', 'yt-to-wp-transcription' ),
 						'label_sources'    => __( 'Sources heading', 'yt-to-wp-transcription' ),
 						'label_watch'      => __( 'Link to the video', 'yt-to-wp-transcription' ),
 					);

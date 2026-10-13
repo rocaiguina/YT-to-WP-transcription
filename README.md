@@ -3,10 +3,11 @@
 A WordPress plugin that watches a YouTube channel and turns each upload into
 a draft post carrying an edited, readable transcript.
 
-The video is the original work. The plugin does not write journalism: it
-takes the words that were already spoken, fixes what speech recognition got
-wrong, cuts them into sections, and adds a headline and a short lede so the
-page reads as an article instead of a wall of machine output.
+The video is the original work. The plugin writes it up: it takes the
+stories a journalist covered on camera and produces the article covering the
+same ground, organised by subject and written in that journalist's own
+voice. Nothing in it announces that it began as speech, and it adds no
+reporting of its own.
 
 **Nothing is ever published automatically.** Every post is created as a
 draft for a human to read, correct and publish.
@@ -16,7 +17,7 @@ draft for a human to read, correct and publish.
 1. Checks the channel hourly and notes new uploads in a queue.
 2. Every five minutes, takes one queued video and:
    - downloads its caption track from YouTube,
-   - sends the transcript to Claude for editing,
+   - has Claude write the article from it,
    - creates a WordPress draft with the result.
 3. Shows the queue under **Tools → Video queue**, with the reason for
    anything it passed over and a retry button for anything that failed.

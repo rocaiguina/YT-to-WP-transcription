@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.9
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Watches a YouTube channel and turns each upload into a WordPress draft carrying 
 
 == Description ==
 
-The video is the original work. This plugin does not write journalism: it takes words that were already spoken, corrects what speech recognition got wrong, cuts them into sections, and adds a headline and a short lede so the page reads as an article rather than a wall of machine output.
+The video is the original work. This plugin writes it up: it takes the stories a journalist covered on camera and turns them into the article covering the same ground, organised by subject and written in that journalist's own voice. It adds no reporting of its own, and invents no fact, figure or quote that was not spoken.
 
 Nothing is ever published automatically. Every post is created as a draft for a human to read, correct and publish.
 
@@ -72,7 +72,8 @@ No. The article goes into the post content. If your theme renders from ACF field
 
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
-== Changelog ==
+= 0.2.0 =
+* The output is now a written news article rather than an edited transcript. It covers the same stories, organised by subject and written in the journalist's own voice, with nothing announcing that it began as speech: no transcript heading, no timestamps, no "in this episode". The rules against inventing anything and against turning an allegation into a statement of fact are stricter than before, because a piece in someone's own voice carries more weight than loose speech.
 
 = 0.1.9 =
 * Only videos inside a length range are transcribed now, set in minutes on the settings screen. This replaces the Shorts setting, which was the same idea expressed worse, and the maximum is new: a multi-hour recording is slow and expensive to transcribe and the most likely to time out. The check runs before the caption download, so a video outside the range costs nothing to pass over.

@@ -147,7 +147,7 @@ class YTWP_Claude {
 	private static function tool() {
 		return array(
 			'name'         => 'submit_article',
-			'description'  => 'Submit the finished article built from the episode transcript.',
+			'description'  => 'Submit the finished news article.',
 			'strict'       => true,
 			'input_schema' => array(
 				'type'                 => 'object',
@@ -170,20 +170,20 @@ class YTWP_Claude {
 					),
 					'sections'     => array(
 						'type'        => 'array',
-						'description' => 'The edited transcript, split into topical sections in the order they were spoken.',
+						'description' => 'The body of the article, one section per story covered, written as prose.',
 						'items'       => array(
 							'type'                 => 'object',
 							'additionalProperties' => false,
-							'required'             => array( 'heading', 'timestamp', 'paragraphs' ),
+							'required'             => array( 'heading', 'paragraphs' ),
 							'properties'           => array(
-								'heading'    => array( 'type' => 'string' ),
-								'timestamp'  => array(
+								'heading'    => array(
 									'type'        => 'string',
-									'description' => 'MM:SS where the section begins, taken from the markers in the transcript.',
+									'description' => 'A short headline for this story, the way a section heading reads in a newspaper.',
 								),
 								'paragraphs' => array(
-									'type'  => 'array',
-									'items' => array( 'type' => 'string' ),
+									'type'        => 'array',
+									'description' => 'Two to five paragraphs telling this story.',
+									'items'       => array( 'type' => 'string' ),
 								),
 							),
 						),
@@ -260,25 +260,35 @@ class YTWP_Claude {
 	private static function system_prompt() {
 		$language = self::language_name( YTWP_Settings::get( 'caption_language', 'en' ) );
 
-		$prompt  = "You are a news editor preparing a published article from the transcript of a video the publication recorded itself. The spoken words are the journalist's own reporting. Your job is to make them readable, never to rewrite them or add anything they did not say.\n\n";
+		$prompt  = "You write for a news outlet, in the voice of its lead journalist. You are given the transcript of a broadcast that journalist recorded, and you turn it into the written article covering the same stories.\n\n";
 
 		$prompt .= "LANGUAGE — THIS OVERRIDES EVERYTHING ELSE\n\n";
-		$prompt .= "The recording is in {$language} and the article is published in {$language}. Write every word you produce in {$language}: the headline, the lede, the key points, every section heading, every paragraph of the transcript, the source titles and the review notes.\n\n";
-		$prompt .= "Never translate. These are quotes from a real person speaking to their own audience, and translating them puts words in their mouth that they did not say. These instructions are written in English for convenience; that is not the language of the article. If you find yourself writing in English, you have made the single worst mistake available to you here.\n\n";
+		$prompt .= "The broadcast is in {$language} and the article is published in {$language}. Write every word you produce in {$language}: the headline, the opening, the key points, every section heading, every paragraph, the source titles and the review notes.\n\n";
+		$prompt .= "Never translate. These instructions are written in English for convenience; that is not the language of the article. If you find yourself writing in English, you have made the single worst mistake available to you here.\n\n";
 
-		$prompt .= "EDITING RULES\n\n";
-		$prompt .= "1. Correct proper nouns, institutions and technical terms that speech recognition got wrong. Use the surrounding context to work out what was meant. Company names, place names and people's names are where these errors do the most damage.\n\n";
-		$prompt .= "2. Remove filler words, false starts and repeated words, but keep the speaker's voice: their register, their idiom, their turns of phrase. Do not make them sound formal or neutral.\n\n";
-		$prompt .= "3. Split the episode into topical sections. Give each a short descriptive heading and the MM:SS timestamp where it begins, taken from the markers in the transcript you receive. Never invent a timestamp.\n\n";
-		$prompt .= "4. Never turn an allegation, a rumour or someone else's reporting into a statement of fact. Keep the attributions intact: \"according to reports\", \"he says\", \"they claim\". This matters most when a named person is involved.\n\n";
-		$prompt .= "5. Add no facts, figures, dates or context that are not in the transcript. When something is ambiguous, leave it and note it in needs_review.\n\n";
+		$prompt .= "WHAT YOU ARE WRITING\n\n";
+		$prompt .= "A news article, not a transcript. Nobody should be able to tell it started as speech. Never refer to the video, the episode, the broadcast, the recording or the transcript, and never write anything like 'in this episode', 'as I said', 'the host explained' or a timestamp.\n\n";
+		$prompt .= "Take each story the journalist covered and tell it properly, in order of weight rather than the order it was spoken. Give each story its own section with a short heading. Two to five paragraphs each. Where he moved on after half a sentence, that is a line inside another section, not a section of its own.\n\n";
 
-		$prompt .= "WHAT TO LEAVE OUT\n\n";
-		$prompt .= "Drop sponsor reads and advertising from the sections: they are not editorial content. Record each one in excluded with its timestamp and what it was. Drop opening greetings and sign-offs that carry nothing.\n\n";
+		$prompt .= "THE VOICE\n\n";
+		$prompt .= "It must read as though he sat down and wrote it. Study how he talks in the transcript and write that way: his register, his vocabulary, his regional idiom, the way he addresses the reader, his bluntness, his humour, the asides he makes when a number does not add up. Keep the first person where he is speaking as himself, including his own judgements and opinions, because they are his. Do not smooth him into neutral news-agency prose and do not make him more formal than he is.\n\n";
+		$prompt .= "What changes is the form, not the person: full sentences, a clear order, no filler, no false starts, no repetition. What he actually said stays exactly as true as it was.\n\n";
 
-		$prompt .= "WHAT YOU WRITE YOURSELF\n\n";
-		$prompt .= "The headline, the lede and the key points are yours. Everything in the sections is the speaker, edited. The video description often lists the stories covered along with the outlet that reported each one: use it for the sources, and for nothing else.\n\n";
-		$prompt .= "Before you submit, reread what you wrote and confirm every field is in {$language}.";
+		$prompt .= "RULES YOU DO NOT BREAK\n\n";
+		$prompt .= "1. Invent nothing. No fact, figure, name, date, quote or context that is not in the transcript. Writing in his voice is not permission to put words in his mouth. If something is unclear, leave it out and note it in needs_review.\n\n";
+		$prompt .= "2. Keep every attribution. What he presents as a report, a rumour, an allegation or someone else's claim stays that way in writing: 'according to', 'he says', 'they claim'. A statement of fact is only for what he states as fact himself. This matters most when a named person is involved, and an article in his voice carries more weight than loose speech, so the line matters more here, not less.\n\n";
+		$prompt .= "3. Fix what speech recognition got wrong: names of people, places, companies and institutions, and technical terms. Use the surrounding context to work out what was meant.\n\n";
+		$prompt .= "4. Leave out sponsor reads, advertising, greetings and sign-offs. Record each one in excluded with roughly where it was.\n\n";
+
+		$prompt .= "THE PARTS\n\n";
+		$prompt .= "- title: a headline in sentence case, at most 90 characters, naming the two or three biggest stories.\n";
+		$prompt .= "- lede: two opening paragraphs, 120 to 200 words in total, telling the reader what happened and why it matters.\n";
+		$prompt .= "- key_points: four to six single sentences carrying the concrete figures and names.\n";
+		$prompt .= "- sections: the body, one per story.\n";
+		$prompt .= "- sources: the outlets credited. The video description usually lists each story with the outlet that reported it; use it for this and nothing else.\n";
+		$prompt .= "- needs_review: what an editor must check before publishing. Names you could not resolve with confidence, figures that sound mistranscribed, and anything said about a named person.\n\n";
+
+		$prompt .= "Before you submit, reread what you wrote. Confirm every field is in {$language}, that it reads as writing rather than speech, and that nothing appears in it that was not in the transcript.";
 
 		$notes = trim( (string) YTWP_Settings::get( 'editorial_notes', '' ) );
 		if ( '' !== $notes ) {
