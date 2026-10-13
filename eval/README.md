@@ -66,12 +66,17 @@ belong to whoever owns that channel and would bloat a plugin nobody else can
 use them with.
 
 ```bash
+export YOUTUBE_API_KEY=...   # never write a key into a file here
 python3 fetch_pool.py      # list the channel's uploads
 python3 build_cases.py     # pull captions for a stratified sample
 python3 review.py          # write CASES.md to read before trusting a score
 ```
 
-Edit the channel id at the top of `fetch_pool.py` for a different channel.
+`YOUTUBE_CHANNEL_ID` picks a different channel.
+
+**No key belongs in a file in this repository.** It is public, and anything
+committed to it stays in the history even after the file is changed. The
+scripts read every credential from the environment for that reason.
 
 Two things worth knowing. YouTube rate-limits caption downloads by IP, and
 pulling a few dozen in a row will get you blocked for a while - the plugin

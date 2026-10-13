@@ -1,8 +1,11 @@
 """Collect candidate episodes: metadata now, transcripts in the next pass."""
-import json, re, urllib.request, urllib.parse
+import json, os, re, sys, urllib.request, urllib.parse
 
-KEY = "os.environ.get("YOUTUBE_API_KEY", "")"
-CHANNEL = "UC5KgvCdS0BP4dYGkGJ06hiQ"
+KEY = os.environ.get("YOUTUBE_API_KEY", "")
+if not KEY:
+    sys.exit("Falta YOUTUBE_API_KEY. Exporta la llave antes de correr esto; "
+             "nunca la escribas en un archivo de un repositorio público.")
+CHANNEL = os.environ.get("YOUTUBE_CHANNEL_ID", "UC5KgvCdS0BP4dYGkGJ06hiQ")
 UPLOADS = "UU" + CHANNEL[2:]
 
 def api(path, **params):
