@@ -79,9 +79,21 @@ class YTWP_Worker {
 				return $result;
 			}
 
+			$earliest    = trim( (string) YTWP_Settings::get( 'earliest_video_date', '' ) );
+			$floor       = '' !== $earliest ? strtotime( $earliest . ' 00:00:00 UTC' ) : 0;
 			$new_on_page = 0;
+			$too_old     = 0;
+
 			foreach ( $result['videos'] as $video ) {
 				$seen++;
+
+				// A channel with thousands of uploads would otherwise queue
+				// its entire history, which costs real money to transcribe.
+				if ( $floor && strtotime( $video['published_at'] ) < $floor ) {
+					$too_old++;
+					continue;
+				}
+
 				if ( YTWP_Store::remember( $video ) ) {
 					$added++;
 					$new_on_page++;
@@ -92,7 +104,9 @@ class YTWP_Worker {
 
 			$page_token = $result['next_page_token'];
 
-			if ( ! $page_token || 0 === $new_on_page ) {
+			// Uploads come newest first, so a page that is entirely older
+			// than the floor means everything beyond it is too.
+			if ( ! $page_token || 0 === $new_on_page || ( $too_old > 0 && 0 === $new_on_page ) ) {
 				break;
 			}
 		}

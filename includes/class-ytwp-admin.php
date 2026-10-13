@@ -139,6 +139,7 @@ class YTWP_Admin {
 						<td>
 							<input type="text" class="regular-text" id="ytwp_channel_id" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[channel_id]" value="<?php echo esc_attr( $settings['channel_id'] ); ?>" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" />
 							<p class="description"><?php esc_html_e( 'Starts with UC. Find it in YouTube Studio under Settings, Channel, Advanced settings.', 'yt-to-wp-transcription' ); ?></p>
+							<?php self::render_channel_check( $settings ); ?>
 						</td>
 					</tr>
 					<tr>
@@ -220,6 +221,13 @@ class YTWP_Admin {
 
 				<h2 class="title"><?php esc_html_e( 'What becomes a post', 'yt-to-wp-transcription' ); ?></h2>
 				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="ytwp_earliest_video_date"><?php esc_html_e( 'Ignore videos published before', 'yt-to-wp-transcription' ); ?></label></th>
+						<td>
+							<input type="date" id="ytwp_earliest_video_date" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[earliest_video_date]" value="<?php echo esc_attr( $settings['earliest_video_date'] ); ?>" />
+							<p class="description"><?php esc_html_e( 'Leave empty to work through the whole channel. On a channel with years of uploads that means thousands of videos and a transcription bill to match, so a date is usually what you want.', 'yt-to-wp-transcription' ); ?></p>
+						</td>
+					</tr>
 					<tr>
 						<th scope="row"><label for="ytwp_min_transcript_words"><?php esc_html_e( 'Minimum transcript words', 'yt-to-wp-transcription' ); ?></label></th>
 						<td>
@@ -354,6 +362,49 @@ class YTWP_Admin {
 			</p>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Show which channel the saved id actually resolves to. Two channels can
+	 * share a name, so the upload count is the part that matters: it is what
+	 * separates a main channel from a near-empty namesake.
+	 *
+	 * @param array $settings Current settings.
+	 */
+	private static function render_channel_check( array $settings ) {
+		$channel_id = trim( (string) $settings['channel_id'] );
+		if ( '' === $channel_id || '' === trim( (string) $settings['youtube_api_key'] ) ) {
+			return;
+		}
+
+		$cache_key = 'ytwp_channel_' . md5( $channel_id );
+		$info      = get_transient( $cache_key );
+
+		if ( false === $info ) {
+			$info = YTWP_YouTube::describe_channel( $channel_id );
+			set_transient( $cache_key, $info, 10 * MINUTE_IN_SECONDS );
+		}
+
+		if ( is_wp_error( $info ) ) {
+			printf(
+				'<p class="description" style="color:#b32d2e"><strong>%s</strong></p>',
+				esc_html( $info->get_error_message() )
+			);
+			return;
+		}
+
+		printf(
+			'<p class="description" style="color:#008a20"><strong>%s</strong> %s</p>',
+			esc_html( $info['title'] ),
+			esc_html(
+				sprintf(
+					/* translators: 1: channel handle, 2: number of uploads. */
+					_n( '%1$s · %2$s video on the channel', '%1$s · %2$s videos on the channel', $info['videos'], 'yt-to-wp-transcription' ),
+					$info['custom_url'],
+					number_format_i18n( $info['videos'] )
+				)
+			)
+		);
 	}
 
 	/**

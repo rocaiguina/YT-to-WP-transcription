@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.7
+Stable tag: 0.1.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,10 @@ No. The article goes into the post content. If your theme renders from ACF field
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
 == Changelog ==
+
+= 0.1.8 =
+* The settings screen now names the channel the saved id resolves to, along with how many videos it holds. Two channels can share a name, and the upload count is what separates a main channel from a near-empty namesake.
+* Added a date floor, so pointing the plugin at a channel with years of uploads no longer queues its entire history.
 
 = 0.1.7 =
 * Fixed: deleting a draft and running the video again kept answering that a draft already existed. A post deleted for good was being mistaken for one that was still there.

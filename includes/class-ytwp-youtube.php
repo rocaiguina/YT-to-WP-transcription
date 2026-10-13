@@ -43,6 +43,42 @@ class YTWP_YouTube {
 	}
 
 	/**
+	 * Who the configured channel id actually belongs to. Two channels can
+	 * carry the same name, so the upload count is what tells a main channel
+	 * apart from a near-empty namesake.
+	 *
+	 * @param string $channel_id Channel id.
+	 * @return array|WP_Error {title, videos, custom_url}
+	 */
+	public static function describe_channel( $channel_id ) {
+		$data = self::get(
+			'channels',
+			array(
+				'part' => 'snippet,statistics',
+				'id'   => $channel_id,
+			)
+		);
+		if ( is_wp_error( $data ) ) {
+			return $data;
+		}
+
+		if ( empty( $data['items'][0] ) ) {
+			return new WP_Error(
+				'ytwp_channel_not_found',
+				__( 'No channel has that id. Check it in YouTube Studio under Settings, Channel, Advanced settings.', 'yt-to-wp-transcription' )
+			);
+		}
+
+		$item = $data['items'][0];
+
+		return array(
+			'title'      => isset( $item['snippet']['title'] ) ? $item['snippet']['title'] : '',
+			'custom_url' => isset( $item['snippet']['customUrl'] ) ? $item['snippet']['customUrl'] : '',
+			'videos'     => isset( $item['statistics']['videoCount'] ) ? (int) $item['statistics']['videoCount'] : 0,
+		);
+	}
+
+	/**
 	 * One page of the channel's uploads, newest first, with the duration and
 	 * description each video needs later.
 	 *
