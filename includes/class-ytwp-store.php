@@ -21,7 +21,7 @@ class YTWP_Store {
 	const STATUS_ERROR   = 'error';
 
 	const DB_VERSION_OPTION = 'ytwp_db_version';
-	const DB_VERSION        = 1;
+	const DB_VERSION        = 2;
 
 	/**
 	 * Fully qualified table name.
@@ -39,8 +39,15 @@ class YTWP_Store {
 	public static function install() {
 		global $wpdb;
 
-		$table   = self::table();
-		$collate = $wpdb->get_charset_collate();
+		$table = self::table();
+
+		// Video titles routinely carry emoji. Against a three-byte utf8
+		// column MySQL rejects the whole row, so the scan reported videos as
+		// queued while the table stayed empty. Ask for utf8mb4 outright
+		// wherever the server can provide it.
+		$collate = $wpdb->has_cap( 'utf8mb4' )
+			? 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+			: $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE {$table} (
 			video_id varchar(32) NOT NULL,
@@ -65,6 +72,17 @@ class YTWP_Store {
 	}
 
 	/**
+	 * Bring the table up to date after an update that changed the schema.
+	 * Activation hooks do not fire on a plugin upgrade, so without this a
+	 * schema fix would only reach sites that deactivate and reactivate.
+	 */
+	public static function maybe_upgrade() {
+		if ( (int) get_option( self::DB_VERSION_OPTION, 0 ) < self::DB_VERSION ) {
+			self::install();
+		}
+	}
+
+	/**
 	 * Record a video the scan just found. Existing rows are left untouched,
 	 * so a rescan never resets work already done.
 	 *
@@ -85,7 +103,7 @@ class YTWP_Store {
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->insert(
+		$ok = $wpdb->insert(
 			$table,
 			array(
 				'video_id'         => $video['video_id'],
@@ -98,7 +116,32 @@ class YTWP_Store {
 			array( '%s', '%s', '%s', '%d', '%s', '%s' )
 		);
 
+		// Returning true regardless of the result hid a whole class of
+		// failure: the scan would report videos as queued while the table
+		// stayed empty. Emoji in a title against a column that is not
+		// utf8mb4 is the usual cause.
+		if ( false === $ok ) {
+			self::$last_error = $wpdb->last_error;
+			return false;
+		}
+
 		return true;
+	}
+
+	/**
+	 * Why the last write failed, for the admin screen to show.
+	 *
+	 * @var string
+	 */
+	private static $last_error = '';
+
+	/**
+	 * The database error from the last failed write.
+	 *
+	 * @return string
+	 */
+	public static function last_error() {
+		return self::$last_error;
 	}
 
 	/**
@@ -247,6 +290,8 @@ class YTWP_Store {
 	 * @param string $video_id Video id.
 	 */
 	public static function requeue( $video_id ) {
+		global $wpdb;
+
 		self::set_status(
 			$video_id,
 			self::STATUS_PENDING,
@@ -254,6 +299,21 @@ class YTWP_Store {
 				'note' => '',
 				'kind' => '',
 			)
+		);
+
+		// Clear the post this video produced last time and the spent
+		// attempts, so a re-run starts from nothing rather than tripping
+		// over its own previous output.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->update(
+			self::table(),
+			array(
+				'post_id'  => null,
+				'attempts' => 0,
+			),
+			array( 'video_id' => $video_id ),
+			array( '%d', '%d' ),
+			array( '%s' )
 		);
 	}
 
@@ -274,7 +334,12 @@ class YTWP_Store {
 		$known = (int) $wpdb->get_var(
 			$wpdb->prepare( "SELECT post_id FROM {$table} WHERE video_id = %s", $video_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		);
-		if ( $known && 'trash' !== get_post_status( $known ) ) {
+		// get_post_status() returns false for a post that was deleted for
+		// good, and false is not 'trash', so the old check handed back the
+		// id of a post that no longer existed — which is why deleting a
+		// draft and running the video again kept saying it already had one.
+		$status = $known ? get_post_status( $known ) : false;
+		if ( $known && $status && 'trash' !== $status ) {
 			return $known;
 		}
 

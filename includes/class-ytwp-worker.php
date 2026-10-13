@@ -70,6 +70,7 @@ class YTWP_Worker {
 
 		$added      = 0;
 		$seen       = 0;
+		$failed     = 0;
 		$page_token = null;
 
 		for ( $page = 0; $page < max( 1, (int) $max_pages ); $page++ ) {
@@ -84,6 +85,8 @@ class YTWP_Worker {
 				if ( YTWP_Store::remember( $video ) ) {
 					$added++;
 					$new_on_page++;
+				} elseif ( '' !== YTWP_Store::last_error() ) {
+					$failed++;
 				}
 			}
 
@@ -92,6 +95,18 @@ class YTWP_Worker {
 			if ( ! $page_token || 0 === $new_on_page ) {
 				break;
 			}
+		}
+
+		if ( $failed > 0 ) {
+			return new WP_Error(
+				'ytwp_queue_write_failed',
+				sprintf(
+					/* translators: 1: number of videos, 2: database error. */
+					__( 'The channel was read, but %1$d videos could not be written to the queue. The database said: %2$s', 'yt-to-wp-transcription' ),
+					$failed,
+					YTWP_Store::last_error()
+				)
+			);
 		}
 
 		return array(

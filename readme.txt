@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.6
+Stable tag: 0.1.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,11 @@ No. The article goes into the post content. If your theme renders from ACF field
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
 == Changelog ==
+
+= 0.1.7 =
+* Fixed: deleting a draft and running the video again kept answering that a draft already existed. A post deleted for good was being mistaken for one that was still there.
+* Fixed: videos whose row never reached the queue were counted as queued anyway. Titles carrying emoji were the likely casualty, so the queue table now asks for utf8mb4 and migrates itself on upgrade.
+* The channel check now reports a database write failure instead of passing over it.
 
 = 0.1.6 =
 * Fixed: articles were being translated into English instead of staying in the language of the recording. The editing instructions now name that language in full, lead with it, and forbid translating the speaker outright.
