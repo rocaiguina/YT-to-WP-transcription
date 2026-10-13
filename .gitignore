@@ -9,3 +9,12 @@
 # Dependencies, if any are ever added
 vendor/
 node_modules/
+
+# Eval working files. The cases are one channel's transcripts: they belong to
+# whoever owns that channel, and nobody else can use them anyway.
+eval/cases/
+eval/pool.json
+eval/CASES.md
+eval/suspect_guests.json
+eval/guest_ids.json
+eval/.hillclimb/

@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.2.1
+Stable tag: 0.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,6 +71,9 @@ No. The article goes into the post content. If your theme renders from ACF field
 = The queue is not moving. =
 
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
+
+= 0.2.2 =
+* Fixed a deprecation notice from PHP 8.1 onwards: caption offsets arriving as floats were converted to integers implicitly when formatting a timestamp, which filled the site's error log on every run.
 
 = 0.2.1 =
 * Episodes where anyone else speaks are now passed over instead of written up. An article is written in one voice, so a guest, co-host or panel would have their sentences published under the journalist's name. Only the transcript reveals who speaks, so the video is read first and then skipped, and the queue records who else was there. Can be switched off.

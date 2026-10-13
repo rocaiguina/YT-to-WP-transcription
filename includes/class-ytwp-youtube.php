@@ -369,7 +369,12 @@ class YTWP_YouTube {
 	 * @return string
 	 */
 	public static function format_timestamp( $seconds ) {
-		return sprintf( '[%02d:%02d]', floor( $seconds / 60 ), $seconds % 60 );
+		// Caption offsets arrive as floats from some sources, and the
+		// modulo operator converting one implicitly is deprecated from PHP
+		// 8.1 — which would fill the site's error log on every run.
+		$seconds = (int) $seconds;
+
+		return sprintf( '[%02d:%02d]', intdiv( $seconds, 60 ), $seconds % 60 );
 	}
 
 	/**
