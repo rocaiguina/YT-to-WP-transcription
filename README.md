@@ -96,9 +96,10 @@ account permissions and connect again.
 
 | Setting | What it controls |
 |---|---|
-| Minimum transcript words | Below this a video is treated as a clip. 400 words is roughly three minutes of speech. |
-| Shorts length | What counts as a Short. |
-| Short videos | Whether to transcribe them, and whether to give them a post at all. |
+| Video length to transcribe | Only videos inside this range are transcribed. Zero on either side removes that end of the limit. |
+| Minimum transcript words | A second floor, for a video that is long but barely speaks. |
+| Videos outside the range | Whether they still get a draft holding the video, or no post at all. |
+| Ignore videos published before | Stops the queue walking years of back catalogue. |
 | Category, Author | Applied to every draft. |
 | House notes | Appended to the editing instructions. Good for recurring names the transcriber mishears. |
 

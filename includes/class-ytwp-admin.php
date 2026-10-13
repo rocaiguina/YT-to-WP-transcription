@@ -236,25 +236,24 @@ class YTWP_Admin {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Short videos', 'yt-to-wp-transcription' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Video length to transcribe', 'yt-to-wp-transcription' ); ?></th>
 						<td>
-							<label>
-								<input type="checkbox" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[skip_shorts]" value="1" <?php checked( $settings['skip_shorts'], 1 ); ?> />
-								<?php esc_html_e( 'Do not transcribe videos at or under the Shorts length', 'yt-to-wp-transcription' ); ?>
-							</label>
-							<br />
-							<label>
-								<input type="checkbox" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[publish_short_clips]" value="1" <?php checked( $settings['publish_short_clips'], 1 ); ?> />
-								<?php esc_html_e( 'Still give those videos a draft carrying the video and its description', 'yt-to-wp-transcription' ); ?>
-							</label>
-							<p class="description"><?php esc_html_e( 'Unchecking the second box means short videos get no post at all.', 'yt-to-wp-transcription' ); ?></p>
+							<label for="ytwp_min_duration_minutes"><?php esc_html_e( 'From', 'yt-to-wp-transcription' ); ?></label>
+							<input type="number" class="small-text" min="0" id="ytwp_min_duration_minutes" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[min_duration_minutes]" value="<?php echo esc_attr( $settings['min_duration_minutes'] ); ?>" />
+							<label for="ytwp_max_duration_minutes"><?php esc_html_e( 'up to', 'yt-to-wp-transcription' ); ?></label>
+							<input type="number" class="small-text" min="0" id="ytwp_max_duration_minutes" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[max_duration_minutes]" value="<?php echo esc_attr( $settings['max_duration_minutes'] ); ?>" />
+							<?php esc_html_e( 'minutes', 'yt-to-wp-transcription' ); ?>
+							<p class="description"><?php esc_html_e( 'Only videos inside this range are transcribed. Zero on either side removes that end of the limit. A maximum is worth setting: a multi-hour recording is slow and expensive to transcribe, and is the most likely to time out.', 'yt-to-wp-transcription' ); ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="ytwp_short_max_seconds"><?php esc_html_e( 'Shorts length', 'yt-to-wp-transcription' ); ?></label></th>
+						<th scope="row"><?php esc_html_e( 'Videos outside the range', 'yt-to-wp-transcription' ); ?></th>
 						<td>
-							<input type="number" class="small-text" min="1" id="ytwp_short_max_seconds" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[short_max_seconds]" value="<?php echo esc_attr( $settings['short_max_seconds'] ); ?>" />
-							<?php esc_html_e( 'seconds', 'yt-to-wp-transcription' ); ?>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[publish_short_clips]" value="1" <?php checked( $settings['publish_short_clips'], 1 ); ?> />
+								<?php esc_html_e( 'Still give them a draft carrying the video and its description', 'yt-to-wp-transcription' ); ?>
+							</label>
+							<p class="description"><?php esc_html_e( 'Unchecked, a video outside the range gets no post at all. This also covers videos with no caption track.', 'yt-to-wp-transcription' ); ?></p>
 						</td>
 					</tr>
 					<tr>

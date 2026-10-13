@@ -54,8 +54,8 @@ class YTWP_Settings {
 			'post_author'             => 0,
 			'earliest_video_date'     => '',
 			'min_transcript_words'    => 400,
-			'skip_shorts'             => 1,
-			'short_max_seconds'       => 60,
+			'min_duration_minutes'    => 3,
+			'max_duration_minutes'    => 0,
 			'publish_short_clips'     => 1,
 			'enabled'                 => 0,
 			'acf_body_field'          => '',
@@ -319,14 +319,14 @@ class YTWP_Settings {
 			$clean['google_refresh_token'] = trim( sanitize_text_field( wp_unslash( $input['google_refresh_token'] ) ) );
 		}
 
-		$int_keys = array( 'post_category', 'post_author', 'min_transcript_words', 'short_max_seconds' );
+		$int_keys = array( 'post_category', 'post_author', 'min_transcript_words', 'min_duration_minutes', 'max_duration_minutes' );
 		foreach ( $int_keys as $key ) {
 			if ( isset( $input[ $key ] ) ) {
 				$clean[ $key ] = absint( $input[ $key ] );
 			}
 		}
 
-		foreach ( array( 'skip_shorts', 'publish_short_clips', 'enabled' ) as $key ) {
+		foreach ( array( 'publish_short_clips', 'enabled' ) as $key ) {
 			$clean[ $key ] = empty( $input[ $key ] ) ? 0 : 1;
 		}
 

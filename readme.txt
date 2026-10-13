@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.8
+Stable tag: 0.1.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,9 @@ No. The article goes into the post content. If your theme renders from ACF field
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
 
 == Changelog ==
+
+= 0.1.9 =
+* Only videos inside a length range are transcribed now, set in minutes on the settings screen. This replaces the Shorts setting, which was the same idea expressed worse, and the maximum is new: a multi-hour recording is slow and expensive to transcribe and the most likely to time out. The check runs before the caption download, so a video outside the range costs nothing to pass over.
 
 = 0.1.8 =
 * The settings screen now names the channel the saved id resolves to, along with how many videos it holds. Two channels can share a name, and the upload count is what separates a main channel from a near-empty namesake.

@@ -164,6 +164,28 @@ class YTWP_Worker {
 	}
 
 	/**
+	 * A duration as hours and minutes, for the reason written on the row.
+	 *
+	 * @param int $seconds Duration.
+	 * @return string
+	 */
+	private static function format_length( $seconds ) {
+		$minutes = (int) round( $seconds / MINUTE_IN_SECONDS );
+
+		if ( $minutes < 60 ) {
+			/* translators: %d: whole minutes. */
+			return sprintf( _n( '%d minute', '%d minutes', $minutes, 'yt-to-wp-transcription' ), $minutes );
+		}
+
+		return sprintf(
+			/* translators: 1: whole hours, 2: remaining minutes. */
+			__( '%1$dh %2$02dm', 'yt-to-wp-transcription' ),
+			intdiv( $minutes, 60 ),
+			$minutes % 60
+		);
+	}
+
+	/**
 	 * Everything that can go wrong for one video, in one place.
 	 *
 	 * @param object $row Queue row.
@@ -194,12 +216,41 @@ class YTWP_Worker {
 			return self::fail( $row, $video );
 		}
 
-		$short_max  = (int) YTWP_Settings::get( 'short_max_seconds', 60 );
-		$is_short   = $video['duration_seconds'] > 0 && $video['duration_seconds'] <= $short_max;
 		$keep_clips = (bool) YTWP_Settings::get( 'publish_short_clips', 1 );
+		$minutes    = $video['duration_seconds'] / MINUTE_IN_SECONDS;
+		$min_length = (int) YTWP_Settings::get( 'min_duration_minutes', 0 );
+		$max_length = (int) YTWP_Settings::get( 'max_duration_minutes', 0 );
 
-		if ( $is_short && YTWP_Settings::get( 'skip_shorts' ) ) {
-			return self::as_clip_or_skip( $row, $video, $keep_clips, 'short', __( 'Shorter than the Shorts threshold.', 'yt-to-wp-transcription' ) );
+		// Checked before the caption download, so a video outside the range
+		// costs nothing to pass over.
+		if ( $min_length > 0 && $minutes < $min_length ) {
+			return self::as_clip_or_skip(
+				$row,
+				$video,
+				$keep_clips,
+				'too-short',
+				sprintf(
+					/* translators: 1: video length, 2: configured minimum. */
+					__( 'Runs %1$s, under the %2$d minute minimum.', 'yt-to-wp-transcription' ),
+					self::format_length( $video['duration_seconds'] ),
+					$min_length
+				)
+			);
+		}
+
+		if ( $max_length > 0 && $minutes > $max_length ) {
+			return self::as_clip_or_skip(
+				$row,
+				$video,
+				$keep_clips,
+				'too-long',
+				sprintf(
+					/* translators: 1: video length, 2: configured maximum. */
+					__( 'Runs %1$s, over the %2$d minute maximum.', 'yt-to-wp-transcription' ),
+					self::format_length( $video['duration_seconds'] ),
+					$max_length
+				)
+			);
 		}
 
 		$transcript = YTWP_YouTube::get_transcript( $video_id );
