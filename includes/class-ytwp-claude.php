@@ -161,7 +161,7 @@ class YTWP_Claude {
 				'properties'           => array(
 					'title'        => array(
 						'type'        => 'string',
-						'description' => 'Headline in sentence case, at most 90 characters, naming the two or three biggest topics.',
+						'description' => 'Short headline in sentence case, about four words, built around the biggest story. Never more than eight words.',
 					),
 					'lede'         => array(
 						'type'        => 'array',
@@ -295,7 +295,7 @@ class YTWP_Claude {
 		$prompt .= "4. Leave out sponsor reads, advertising, greetings and sign-offs. Record each one in excluded with roughly where it was.\n\n";
 
 		$prompt .= "THE PARTS\n\n";
-		$prompt .= "- title: a headline in sentence case, at most 90 characters, naming the two or three biggest stories.\n";
+		$prompt .= "- title: a short, punchy headline in sentence case. Aim for four words, built around the single biggest story. Go a word or two longer only when four cannot say it clearly; never more than eight.\n";
 		$prompt .= "- lede: two opening paragraphs, 120 to 200 words in total, telling the reader what happened and why it matters.\n";
 		$prompt .= "- key_points: four to six single sentences carrying the concrete figures and names.\n";
 		$prompt .= "- sections: the body, one per story.\n";

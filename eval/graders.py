@@ -123,8 +123,8 @@ def check_structure(draft):
     title = (draft.get("title") or "").strip()
     if not title:
         problems.append("sin titular")
-    elif len(title) > 110:
-        problems.append(f"titular de {len(title)} caracteres")
+    elif len(title.split()) > 8:
+        problems.append(f"titular de {len(title.split())} palabras (meta: 4)")
     elif title.isupper():
         problems.append("titular en mayúsculas sostenidas")
 
