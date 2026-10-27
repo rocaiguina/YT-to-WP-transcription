@@ -69,10 +69,13 @@ class YTWP_OAuth {
 				'redirect_uri'  => rawurlencode( self::redirect_uri() ),
 				'response_type' => 'code',
 				'scope'         => rawurlencode( self::SCOPE ),
-				// Without both of these Google returns an access token only,
-				// and the plugin would stop working within the hour.
+				// Without offline access and forced consent Google returns an
+				// access token only, and the plugin would stop working within
+				// the hour. select_account makes Google ask which account to
+				// use instead of silently taking the first one signed in, which
+				// is rarely the one that owns the channel.
 				'access_type'   => 'offline',
-				'prompt'        => 'consent',
+				'prompt'        => 'select_account consent',
 				'state'         => rawurlencode( $state ),
 			),
 			self::AUTH_URL
