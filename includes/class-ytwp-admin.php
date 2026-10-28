@@ -428,7 +428,7 @@ class YTWP_Admin {
 								<em><?php esc_html_e( '(main channel)', 'yt-to-wp-transcription' ); ?></em>
 							<?php endif; ?>
 						</td>
-						<td><?php echo $is_connected ? esc_html__( 'Connected.', 'yt-to-wp-transcription' ) : esc_html__( 'Not connected.', 'yt-to-wp-transcription' ); ?></td>
+						<td><?php $is_connected ? self::render_token_check( $channel_id, $link_channel ) : esc_html_e( 'Not connected.', 'yt-to-wp-transcription' ); ?></td>
 						<td>
 							<?php if ( $is_connected ) : ?>
 								<a class="button" href="<?php echo esc_url( $start_url ); ?>"><?php esc_html_e( 'Reconnect to YouTube', 'yt-to-wp-transcription' ); ?></a>
@@ -484,6 +484,55 @@ class YTWP_Admin {
 					_n( '%1$s · %2$s video on the channel', '%1$s · %2$s videos on the channel', $info['videos'], 'yt-to-wp-transcription' ),
 					$info['custom_url'],
 					number_format_i18n( $info['videos'] )
+				)
+			)
+		);
+	}
+
+	/**
+	 * Which channel a stored token acts as. "Connected" alone hides the
+	 * usual mistake: picking another channel in Google's account chooser,
+	 * which only shows up later as a 403 on caption downloads.
+	 *
+	 * @param string $channel_id   Channel the row is for.
+	 * @param string $link_channel The same, empty for the main channel.
+	 */
+	private static function render_token_check( $channel_id, $link_channel ) {
+		$cache_key = 'ytwp_token_channel_' . md5( $channel_id );
+		$picked    = get_transient( $cache_key );
+
+		if ( false === $picked ) {
+			$token  = YTWP_OAuth::access_token( $link_channel );
+			$picked = is_wp_error( $token ) ? $token : YTWP_YouTube::token_channel( $token );
+			set_transient( $cache_key, $picked, 10 * MINUTE_IN_SECONDS );
+		}
+
+		if ( is_wp_error( $picked ) ) {
+			printf( '<span style="color:#b32d2e">%s</span>', esc_html( $picked->get_error_message() ) );
+			return;
+		}
+
+		if ( $picked['id'] !== $channel_id ) {
+			printf(
+				'<span style="color:#b32d2e"><strong>%s</strong></span>',
+				esc_html(
+					sprintf(
+						/* translators: %s: channel title. */
+						__( 'Connected as "%s", the wrong channel. Reconnect and pick this one.', 'yt-to-wp-transcription' ),
+						$picked['title']
+					)
+				)
+			);
+			return;
+		}
+
+		printf(
+			'<span style="color:#008a20">%s</span>',
+			esc_html(
+				sprintf(
+					/* translators: %s: channel title. */
+					__( 'Connected as "%s".', 'yt-to-wp-transcription' ),
+					$picked['title']
 				)
 			)
 		);

@@ -74,6 +74,7 @@ WP-Cron only fires when someone visits the site. On a quiet site, point a real c
 
 = 0.2.6 =
 * Connecting a channel now checks that you picked that channel in Google's account chooser. Picking another channel used to save a token that failed later with "YouTube refused the caption download (HTTP 403)".
+* The Connect table now shows which channel each connection acts as, in red when it is the wrong one.
 
 = 0.2.5 =
 * More than one channel: add channels under "More channels", each with its own category and its own Connect to YouTube. The main channel keeps working as before.

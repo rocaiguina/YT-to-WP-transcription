@@ -243,6 +243,7 @@ class YTWP_OAuth {
 		}
 
 		self::save_token( $channel, $body['refresh_token'] );
+		delete_transient( 'ytwp_token_channel_' . md5( $expected_id ) );
 
 		self::back_with( 'connected', 'updated' );
 	}
