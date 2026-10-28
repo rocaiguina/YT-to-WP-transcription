@@ -3,7 +3,7 @@
  * Plugin Name:       YT to WP Transcription
  * Plugin URI:        https://github.com/rocaiguina/YT-to-WP-transcription
  * Description:       Watches a YouTube channel and turns each upload into a WordPress draft carrying an edited, readable transcript.
- * Version:           0.2.4
+ * Version:           0.2.5
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Jagual Media
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'YTWP_VERSION', '0.2.4' );
+define( 'YTWP_VERSION', '0.2.5' );
 define( 'YTWP_FILE', __FILE__ );
 define( 'YTWP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'YTWP_URL', plugin_dir_url( __FILE__ ) );

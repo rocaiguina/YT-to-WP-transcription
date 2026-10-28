@@ -68,6 +68,7 @@ class YTWP_Admin {
 			'token-request-failed' => __( 'The site could not reach Google to exchange the code.', 'yt-to-wp-transcription' ),
 			'no-refresh-token'     => __( 'Google returned no refresh token. Remove the app under your Google account permissions and connect again.', 'yt-to-wp-transcription' ),
 			'requeued'             => __( 'Video put back in the queue.', 'yt-to-wp-transcription' ),
+			'unknown-channel'      => __( 'Save the channel id on the settings screen before connecting it.', 'yt-to-wp-transcription' ),
 		);
 
 		$message = isset( $messages[ $code ] ) ? $messages[ $code ] : '';
@@ -139,7 +140,7 @@ class YTWP_Admin {
 						<td>
 							<input type="text" class="regular-text" id="ytwp_channel_id" name="<?php echo esc_attr( YTWP_Settings::OPTION ); ?>[channel_id]" value="<?php echo esc_attr( $settings['channel_id'] ); ?>" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" />
 							<p class="description"><?php esc_html_e( 'Starts with UC. Find it in YouTube Studio under Settings, Channel, Advanced settings.', 'yt-to-wp-transcription' ); ?></p>
-							<?php self::render_channel_check( $settings ); ?>
+							<?php self::render_channel_check( $settings['channel_id'], $settings['youtube_api_key'] ); ?>
 						</td>
 					</tr>
 					<tr>
@@ -149,6 +150,56 @@ class YTWP_Admin {
 							<p class="description"><?php esc_html_e( 'Two-letter code, such as en or es. A hand-uploaded track in this language wins over the automatic one.', 'yt-to-wp-transcription' ); ?></p>
 						</td>
 					</tr>
+				</table>
+
+				<h2 class="title"><?php esc_html_e( 'More channels', 'yt-to-wp-transcription' ); ?></h2>
+				<p class="description">
+					<?php esc_html_e( 'Other channels to transcribe the same way. Each one files its posts under its own category and needs its own YouTube connection, made below with the account that manages it. Clear a channel id to stop watching it.', 'yt-to-wp-transcription' ); ?>
+				</p>
+				<table class="widefat striped" style="max-width:900px">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Channel id', 'yt-to-wp-transcription' ); ?></th>
+							<th><?php esc_html_e( 'Category', 'yt-to-wp-transcription' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php
+					// The saved channels plus one blank row for adding the next.
+					$extra_rows   = array_values( (array) $settings['extra_channels'] );
+					$extra_rows[] = array(
+						'channel_id'    => '',
+						'post_category' => 0,
+					);
+					foreach ( $extra_rows as $index => $row ) :
+						$field = YTWP_Settings::OPTION . '[extra_channels][' . $index . ']';
+						?>
+						<tr>
+							<td>
+								<input type="text" class="regular-text code" name="<?php echo esc_attr( $field ); ?>[channel_id]" value="<?php echo esc_attr( isset( $row['channel_id'] ) ? $row['channel_id'] : '' ); ?>" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" />
+								<?php
+								if ( ! empty( $row['channel_id'] ) ) {
+									self::render_channel_check( $row['channel_id'], $settings['youtube_api_key'] );
+								}
+								?>
+							</td>
+							<td>
+								<?php
+								wp_dropdown_categories(
+									array(
+										'show_option_none'  => __( 'Same as the main channel', 'yt-to-wp-transcription' ),
+										'option_none_value' => 0,
+										'hide_empty'        => false,
+										'selected'          => isset( $row['post_category'] ) ? (int) $row['post_category'] : 0,
+										'name'              => $field . '[post_category]',
+										'id'                => 'ytwp_extra_category_' . $index,
+									)
+								);
+								?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
 				</table>
 
 				<h2 class="title"><?php esc_html_e( 'API keys', 'yt-to-wp-transcription' ); ?></h2>
@@ -360,14 +411,36 @@ class YTWP_Admin {
 			</form>
 
 			<h2 class="title"><?php esc_html_e( 'Connect', 'yt-to-wp-transcription' ); ?></h2>
-			<p>
-				<?php if ( $connected ) : ?>
-					<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ytwp_oauth_start' ), 'ytwp_oauth_start' ) ); ?>"><?php esc_html_e( 'Reconnect to YouTube', 'yt-to-wp-transcription' ); ?></a>
-					<a class="button button-link-delete" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ytwp_oauth_disconnect' ), 'ytwp_oauth_disconnect' ) ); ?>"><?php esc_html_e( 'Disconnect', 'yt-to-wp-transcription' ); ?></a>
-				<?php else : ?>
-					<a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ytwp_oauth_start' ), 'ytwp_oauth_start' ) ); ?>"><?php esc_html_e( 'Connect to YouTube', 'yt-to-wp-transcription' ); ?></a>
-				<?php endif; ?>
-			</p>
+			<p class="description"><?php esc_html_e( 'Each channel connects separately. When one Google account manages several channels, Google asks which channel to use: pick the one named in that row.', 'yt-to-wp-transcription' ); ?></p>
+			<table class="widefat striped" style="max-width:900px">
+				<tbody>
+				<?php foreach ( YTWP_Settings::channels() as $channel_id => $channel ) : ?>
+					<?php
+					$link_channel = $channel['main'] ? '' : $channel_id;
+					$start_url    = wp_nonce_url( add_query_arg( 'channel', rawurlencode( $link_channel ), admin_url( 'admin-post.php?action=ytwp_oauth_start' ) ), 'ytwp_oauth_start' );
+					$stop_url     = wp_nonce_url( add_query_arg( 'channel', rawurlencode( $link_channel ), admin_url( 'admin-post.php?action=ytwp_oauth_disconnect' ) ), 'ytwp_oauth_disconnect' );
+					$is_connected = '' !== $channel['refresh_token'];
+					?>
+					<tr>
+						<td>
+							<code><?php echo esc_html( $channel_id ); ?></code>
+							<?php if ( $channel['main'] ) : ?>
+								<em><?php esc_html_e( '(main channel)', 'yt-to-wp-transcription' ); ?></em>
+							<?php endif; ?>
+						</td>
+						<td><?php echo $is_connected ? esc_html__( 'Connected.', 'yt-to-wp-transcription' ) : esc_html__( 'Not connected.', 'yt-to-wp-transcription' ); ?></td>
+						<td>
+							<?php if ( $is_connected ) : ?>
+								<a class="button" href="<?php echo esc_url( $start_url ); ?>"><?php esc_html_e( 'Reconnect to YouTube', 'yt-to-wp-transcription' ); ?></a>
+								<a class="button button-link-delete" href="<?php echo esc_url( $stop_url ); ?>"><?php esc_html_e( 'Disconnect', 'yt-to-wp-transcription' ); ?></a>
+							<?php else : ?>
+								<a class="button button-primary" href="<?php echo esc_url( $start_url ); ?>"><?php esc_html_e( 'Connect to YouTube', 'yt-to-wp-transcription' ); ?></a>
+							<?php endif; ?>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
 		</div>
 		<?php
 	}
@@ -377,11 +450,12 @@ class YTWP_Admin {
 	 * share a name, so the upload count is the part that matters: it is what
 	 * separates a main channel from a near-empty namesake.
 	 *
-	 * @param array $settings Current settings.
+	 * @param string $channel_id Channel id.
+	 * @param string $api_key    Saved YouTube API key; nothing is checked without one.
 	 */
-	private static function render_channel_check( array $settings ) {
-		$channel_id = trim( (string) $settings['channel_id'] );
-		if ( '' === $channel_id || '' === trim( (string) $settings['youtube_api_key'] ) ) {
+	private static function render_channel_check( $channel_id, $api_key ) {
+		$channel_id = trim( (string) $channel_id );
+		if ( '' === $channel_id || '' === trim( (string) $api_key ) ) {
 			return;
 		}
 
@@ -627,15 +701,21 @@ class YTWP_Admin {
 			self::back( $result->get_error_message(), 'error' );
 		}
 
-		self::back(
-			sprintf(
-				/* translators: 1: videos inspected, 2: new videos queued. */
-				__( 'Checked %1$d videos, queued %2$d new ones.', 'yt-to-wp-transcription' ),
-				$result['seen'],
-				$result['added']
-			),
-			'updated'
+		$message = sprintf(
+			/* translators: 1: videos inspected, 2: new videos queued. */
+			__( 'Checked %1$d videos, queued %2$d new ones.', 'yt-to-wp-transcription' ),
+			$result['seen'],
+			$result['added']
 		);
+		if ( ! empty( $result['errors'] ) ) {
+			$message .= ' ' . sprintf(
+				/* translators: %s: error messages from the channels that could not be read. */
+				__( 'Some channels could not be read: %s', 'yt-to-wp-transcription' ),
+				implode( ' ', $result['errors'] )
+			);
+		}
+
+		self::back( $message, empty( $result['errors'] ) ? 'updated' : 'error' );
 	}
 
 	/**

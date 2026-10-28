@@ -55,19 +55,59 @@ class YTWP_Worker {
 	}
 
 	/**
-	 * Note the channel's recent uploads in the queue. Stops at the first page
-	 * that adds nothing new, so the routine run costs one API call even on a
-	 * channel with thousands of videos.
+	 * Note every watched channel's recent uploads in the queue. A channel
+	 * that fails to read does not stop the others; its error is reported
+	 * alongside the counts.
 	 *
-	 * @param int $max_pages Safety bound on how far back to walk.
+	 * @param int $max_pages Safety bound on how far back to walk, per channel.
 	 * @return array|WP_Error Counts.
 	 */
 	public static function scan( $max_pages = 2 ) {
-		$channel_id = (string) YTWP_Settings::get( 'channel_id', '' );
-		if ( '' === $channel_id ) {
+		$channels = YTWP_Settings::channels();
+		if ( empty( $channels ) ) {
 			return new WP_Error( 'ytwp_no_channel', __( 'No channel id is saved.', 'yt-to-wp-transcription' ) );
 		}
 
+		$seen   = 0;
+		$added  = 0;
+		$errors = array();
+
+		foreach ( $channels as $channel_id => $channel ) {
+			$result = self::scan_channel( $channel_id, $max_pages );
+			if ( is_wp_error( $result ) ) {
+				$errors[] = $result;
+				continue;
+			}
+			$seen  += $result['seen'];
+			$added += $result['added'];
+		}
+
+		if ( count( $errors ) === count( $channels ) ) {
+			return $errors[0];
+		}
+
+		return array(
+			'seen'   => $seen,
+			'added'  => $added,
+			'errors' => array_map(
+				static function ( WP_Error $error ) {
+					return $error->get_error_message();
+				},
+				$errors
+			),
+		);
+	}
+
+	/**
+	 * Note one channel's recent uploads in the queue. Stops at the first page
+	 * that adds nothing new, so the routine run costs one API call even on a
+	 * channel with thousands of videos.
+	 *
+	 * @param string $channel_id Channel id.
+	 * @param int    $max_pages  Safety bound on how far back to walk.
+	 * @return array|WP_Error Counts.
+	 */
+	private static function scan_channel( $channel_id, $max_pages ) {
 		$added      = 0;
 		$seen       = 0;
 		$failed     = 0;
@@ -94,6 +134,7 @@ class YTWP_Worker {
 					continue;
 				}
 
+				$video['channel_id'] = $channel_id;
 				if ( YTWP_Store::remember( $video ) ) {
 					$added++;
 					$new_on_page++;
@@ -216,6 +257,12 @@ class YTWP_Worker {
 			return self::fail( $row, $video );
 		}
 
+		// Which channel the video came from decides whose YouTube connection
+		// reads its captions and which category its post goes in. Rows
+		// queued before there was more than one channel have none, which
+		// means the main channel.
+		$video['channel_id'] = isset( $row->channel_id ) ? (string) $row->channel_id : '';
+
 		$keep_clips = (bool) YTWP_Settings::get( 'publish_short_clips', 1 );
 		$minutes    = $video['duration_seconds'] / MINUTE_IN_SECONDS;
 		$min_length = (int) YTWP_Settings::get( 'min_duration_minutes', 0 );
@@ -253,7 +300,7 @@ class YTWP_Worker {
 			);
 		}
 
-		$transcript = YTWP_YouTube::get_transcript( $video_id );
+		$transcript = YTWP_YouTube::get_transcript( $video_id, $video['channel_id'] );
 		if ( is_wp_error( $transcript ) ) {
 			// No caption track is an ordinary outcome for a clip, not a fault
 			// in the run; anything else is a real failure worth retrying.

@@ -38,7 +38,7 @@ class YTWP_Publisher {
 		$post_id = self::insert(
 			$video,
 			$title,
-			self::render_article( $video, $draft )
+			self::embed_block( $video ) . self::render_article( $video, $draft )
 		);
 		if ( is_wp_error( $post_id ) ) {
 			return $post_id;
@@ -67,7 +67,7 @@ class YTWP_Publisher {
 		$body = trim( $video['description'] );
 		$body = '' !== $body ? wpautop( esc_html( $body ) ) : '';
 
-		$post_id = self::insert( $video, $video['title'], $body . self::watch_link( $video ) );
+		$post_id = self::insert( $video, $video['title'], self::embed_block( $video ) . $body . self::watch_link( $video ) );
 		if ( is_wp_error( $post_id ) ) {
 			return $post_id;
 		}
@@ -200,6 +200,25 @@ class YTWP_Publisher {
 	}
 
 	/**
+	 * The video as a WordPress embed block, so the post shows the player
+	 * wherever WordPress renders the content (the site, its feed). It goes
+	 * into the post content only: the ACF body is plain article text, read
+	 * by the website and the app, which show the video from the video id.
+	 *
+	 * @param array $video Video data.
+	 * @return string
+	 */
+	private static function embed_block( array $video ) {
+		$url = self::video_url( $video['video_id'] );
+
+		return '<!-- wp:embed {"url":"' . esc_url( $url ) . '","type":"video","providerNameSlug":"youtube","responsive":true,"className":"wp-embed-aspect-16-9 wp-has-aspect-ratio"} -->' . "\n"
+			. '<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">' . "\n"
+			. esc_url( $url ) . "\n"
+			. "</div></figure>\n"
+			. "<!-- /wp:embed -->\n\n";
+	}
+
+	/**
 	 * Canonical watch URL.
 	 *
 	 * @param string $video_id Video id.
@@ -229,7 +248,13 @@ class YTWP_Publisher {
 			'meta_input'   => array( self::VIDEO_META_KEY => $video['video_id'] ),
 		);
 
-		$category = (int) YTWP_Settings::get( 'post_category', 0 );
+		// Each channel files its posts under its own category; one left on
+		// "same as the main channel" falls back to the main category.
+		$channel  = YTWP_Settings::channel( isset( $video['channel_id'] ) ? $video['channel_id'] : '' );
+		$category = null !== $channel ? (int) $channel['post_category'] : 0;
+		if ( $category < 1 ) {
+			$category = (int) YTWP_Settings::get( 'post_category', 0 );
+		}
 		if ( $category > 0 ) {
 			$postarr['post_category'] = array( $category );
 		}

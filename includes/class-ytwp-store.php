@@ -21,7 +21,7 @@ class YTWP_Store {
 	const STATUS_ERROR   = 'error';
 
 	const DB_VERSION_OPTION = 'ytwp_db_version';
-	const DB_VERSION        = 2;
+	const DB_VERSION        = 3;
 
 	/**
 	 * Fully qualified table name.
@@ -51,6 +51,7 @@ class YTWP_Store {
 
 		$sql = "CREATE TABLE {$table} (
 			video_id varchar(32) NOT NULL,
+			channel_id varchar(64) NOT NULL DEFAULT '',
 			title text NOT NULL,
 			published_at datetime NOT NULL,
 			duration_seconds int unsigned NOT NULL DEFAULT 0,
@@ -107,13 +108,14 @@ class YTWP_Store {
 			$table,
 			array(
 				'video_id'         => $video['video_id'],
+				'channel_id'       => isset( $video['channel_id'] ) ? (string) $video['channel_id'] : '',
 				'title'            => $video['title'],
 				'published_at'     => gmdate( 'Y-m-d H:i:s', strtotime( $video['published_at'] ) ),
 				'duration_seconds' => (int) $video['duration_seconds'],
 				'status'           => self::STATUS_PENDING,
 				'updated_at'       => current_time( 'mysql', true ),
 			),
-			array( '%s', '%s', '%s', '%d', '%s', '%s' )
+			array( '%s', '%s', '%s', '%s', '%d', '%s', '%s' )
 		);
 
 		// Returning true regardless of the result hid a whole class of

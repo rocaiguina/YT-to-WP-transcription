@@ -42,6 +42,10 @@ class YTWP_Settings {
 	public static function defaults() {
 		return array(
 			'channel_id'              => '',
+			// More channels the same account manages, each with its own
+			// category and its own YouTube connection: rows of
+			// {channel_id, post_category, refresh_token}.
+			'extra_channels'          => array(),
 			'anthropic_api_key'       => '',
 			'anthropic_model'         => 'claude-haiku-4-5',
 			'anthropic_workspace_id'  => '',
@@ -149,6 +153,67 @@ class YTWP_Settings {
 			return null === $default ? ( self::defaults()[ $key ] ?? null ) : $default;
 		}
 		return $all[ $key ];
+	}
+
+	/**
+	 * Every channel the plugin watches. The main one comes from the original
+	 * single-channel settings, so a site that never adds another keeps
+	 * working exactly as before. Keyed by channel id.
+	 *
+	 * @return array<string,array{channel_id:string,post_category:int,refresh_token:string,main:bool}>
+	 */
+	public static function channels() {
+		$all      = self::all();
+		$channels = array();
+
+		$main_id = trim( (string) $all['channel_id'] );
+		if ( '' !== $main_id ) {
+			$channels[ $main_id ] = array(
+				'channel_id'    => $main_id,
+				'post_category' => (int) $all['post_category'],
+				'refresh_token' => (string) $all['google_refresh_token'],
+				'main'          => true,
+			);
+		}
+
+		foreach ( (array) $all['extra_channels'] as $row ) {
+			$id = isset( $row['channel_id'] ) ? trim( (string) $row['channel_id'] ) : '';
+			if ( '' === $id || isset( $channels[ $id ] ) ) {
+				continue;
+			}
+			$channels[ $id ] = array(
+				'channel_id'    => $id,
+				'post_category' => isset( $row['post_category'] ) ? (int) $row['post_category'] : 0,
+				'refresh_token' => isset( $row['refresh_token'] ) ? (string) $row['refresh_token'] : '',
+				'main'          => false,
+			);
+		}
+
+		return $channels;
+	}
+
+	/**
+	 * One channel's settings. Videos queued before channels existed carry no
+	 * channel id, so an empty or unknown id means the main channel.
+	 *
+	 * @param string $channel_id Channel id.
+	 * @return array|null
+	 */
+	public static function channel( $channel_id ) {
+		$channels = self::channels();
+		$id       = trim( (string) $channel_id );
+
+		if ( '' !== $id && isset( $channels[ $id ] ) ) {
+			return $channels[ $id ];
+		}
+
+		foreach ( $channels as $channel ) {
+			if ( $channel['main'] ) {
+				return $channel;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -314,6 +379,10 @@ class YTWP_Settings {
 			$clean['google_refresh_token'] = trim( sanitize_text_field( wp_unslash( $input['google_refresh_token'] ) ) );
 		}
 
+		if ( isset( $input['extra_channels'] ) && is_array( $input['extra_channels'] ) ) {
+			$clean['extra_channels'] = self::sanitize_extra_channels( $input['extra_channels'], $current['extra_channels'] );
+		}
+
 		$int_keys = array( 'post_category', 'post_author', 'min_transcript_words', 'min_duration_minutes', 'max_duration_minutes' );
 		foreach ( $int_keys as $key ) {
 			if ( isset( $input[ $key ] ) ) {
@@ -331,6 +400,50 @@ class YTWP_Settings {
 
 		if ( $clean['min_transcript_words'] < 1 ) {
 			$clean['min_transcript_words'] = self::defaults()['min_transcript_words'];
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Clean the extra channel rows. The form has no field for a channel's
+	 * refresh token, so a row coming from the form keeps the token already
+	 * stored for that channel; a row written by the OAuth callback carries
+	 * its new token and that one wins. Blank rows are dropped.
+	 *
+	 * @param array $rows    Submitted rows.
+	 * @param mixed $current Rows stored now.
+	 * @return array
+	 */
+	private static function sanitize_extra_channels( array $rows, $current ) {
+		$stored_tokens = array();
+		foreach ( (array) $current as $row ) {
+			if ( ! empty( $row['channel_id'] ) && ! empty( $row['refresh_token'] ) ) {
+				$stored_tokens[ $row['channel_id'] ] = $row['refresh_token'];
+			}
+		}
+
+		$clean = array();
+		foreach ( $rows as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+			$id = isset( $row['channel_id'] ) ? trim( sanitize_text_field( wp_unslash( $row['channel_id'] ) ) ) : '';
+			if ( '' === $id ) {
+				continue;
+			}
+
+			if ( array_key_exists( 'refresh_token', $row ) ) {
+				$token = trim( sanitize_text_field( wp_unslash( $row['refresh_token'] ) ) );
+			} else {
+				$token = isset( $stored_tokens[ $id ] ) ? $stored_tokens[ $id ] : '';
+			}
+
+			$clean[] = array(
+				'channel_id'    => $id,
+				'post_category' => isset( $row['post_category'] ) ? absint( $row['post_category'] ) : 0,
+				'refresh_token' => $token,
+			);
 		}
 
 		return $clean;

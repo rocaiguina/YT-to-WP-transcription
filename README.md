@@ -93,6 +93,12 @@ The plugin stores the refresh token and mints short-lived access tokens from
 it. If Google ever returns no refresh token, remove the app from your Google
 account permissions and connect again.
 
+**More than one channel.** Add other channels under **More channels** on the
+settings screen, each with the category its posts go in. Every channel needs
+its own **Connect to YouTube** (in the Connect table at the bottom): Google
+issues a token per channel, even when one account manages them all, so when
+the account picker asks which channel to use, pick the one in that row.
+
 ### 3. Choosing what becomes a post
 
 | Setting | What it controls |

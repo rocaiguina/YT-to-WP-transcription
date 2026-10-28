@@ -176,11 +176,13 @@ class YTWP_YouTube {
 	 * the configured language, since that one is already corrected, and
 	 * falls back to the automatic one.
 	 *
-	 * @param string $video_id Video id.
+	 * @param string $video_id   Video id.
+	 * @param string $channel_id Channel the video belongs to; its own
+	 *                           connection is the one allowed to read it.
 	 * @return array|WP_Error {automatic: bool, segments: array[]}
 	 */
-	public static function get_transcript( $video_id ) {
-		$token = YTWP_OAuth::access_token();
+	public static function get_transcript( $video_id, $channel_id = '' ) {
+		$token = YTWP_OAuth::access_token( $channel_id );
 		if ( is_wp_error( $token ) ) {
 			return $token;
 		}
