@@ -79,6 +79,40 @@ class YTWP_YouTube {
 	}
 
 	/**
+	 * The channel an OAuth token acts as. One Google account can manage
+	 * several channels, and the token belongs to whichever was picked on
+	 * the consent screen.
+	 *
+	 * @param string $token OAuth access token.
+	 * @return array|WP_Error {id, title}
+	 */
+	public static function token_channel( $token ) {
+		$data = self::get(
+			'channels',
+			array(
+				'part' => 'snippet',
+				'mine' => 'true',
+			),
+			$token
+		);
+		if ( is_wp_error( $data ) ) {
+			return $data;
+		}
+
+		if ( empty( $data['items'][0]['id'] ) ) {
+			return new WP_Error(
+				'ytwp_no_channel',
+				__( 'That Google account has no YouTube channel.', 'yt-to-wp-transcription' )
+			);
+		}
+
+		return array(
+			'id'    => $data['items'][0]['id'],
+			'title' => isset( $data['items'][0]['snippet']['title'] ) ? $data['items'][0]['snippet']['title'] : '',
+		);
+	}
+
+	/**
 	 * One page of the channel's uploads, newest first, with the duration and
 	 * description each video needs later.
 	 *

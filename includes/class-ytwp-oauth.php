@@ -222,6 +222,26 @@ class YTWP_OAuth {
 			self::back_with( 'no-refresh-token' );
 		}
 
+		// Google asks which channel to act as when one account manages
+		// several, and a token for the wrong one fails much later, on the
+		// first caption download. Check it now, while the admin is here.
+		$expected_id = '' !== $channel ? $channel : trim( (string) YTWP_Settings::get( 'channel_id', '' ) );
+		if ( '' !== $expected_id && ! empty( $body['access_token'] ) ) {
+			$picked = YTWP_YouTube::token_channel( $body['access_token'] );
+			if ( ! is_wp_error( $picked ) && $picked['id'] !== $expected_id ) {
+				self::back_with(
+					'detail',
+					'error',
+					sprintf(
+						/* translators: 1: channel the admin signed in as, 2: channel id being connected. */
+						__( 'You signed in as the channel "%1$s", which is not %2$s. Connect again and pick that channel in Google\'s account chooser.', 'yt-to-wp-transcription' ),
+						$picked['title'],
+						$expected_id
+					)
+				);
+			}
+		}
+
 		self::save_token( $channel, $body['refresh_token'] );
 
 		self::back_with( 'connected', 'updated' );
@@ -324,14 +344,16 @@ class YTWP_OAuth {
 	 *
 	 * @param string $notice Message code.
 	 * @param string $type   'error' or 'updated'.
+	 * @param string $detail Message text, for the 'detail' code.
 	 */
-	private static function back_with( $notice, $type = 'error' ) {
+	private static function back_with( $notice, $type = 'error', $detail = '' ) {
 		wp_safe_redirect(
 			add_query_arg(
 				array(
 					'page'        => YTWP_Admin::SETTINGS_SLUG,
 					'ytwp_notice' => $notice,
 					'ytwp_type'   => $type,
+					'ytwp_detail' => '' !== $detail ? rawurlencode( $detail ) : false,
 				),
 				admin_url( 'options-general.php' )
 			)

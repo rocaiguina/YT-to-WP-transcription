@@ -4,7 +4,7 @@ Tags: youtube, transcript, captions, drafts, ai
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.2.5
+Stable tag: 0.2.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,6 +71,9 @@ No. The article goes into the post content. If your theme renders from ACF field
 = The queue is not moving. =
 
 WP-Cron only fires when someone visits the site. On a quiet site, point a real cron job at wp-cron.php. The buttons on the queue screen also run both jobs on demand.
+
+= 0.2.6 =
+* Connecting a channel now checks that you picked that channel in Google's account chooser. Picking another channel used to save a token that failed later with "YouTube refused the caption download (HTTP 403)".
 
 = 0.2.5 =
 * More than one channel: add channels under "More channels", each with its own category and its own Connect to YouTube. The main channel keeps working as before.
