@@ -136,7 +136,94 @@ class YTWP_Publisher {
 			$out .= "</ul>\n";
 		}
 
+		// Last line, where the outlet's posts keep their hashtags: the site
+		// hides that line, shows them as topic links, and turns them into
+		// tags.
+		$hashtags = self::clean_hashtags( isset( $draft['hashtags'] ) ? $draft['hashtags'] : array() );
+		if ( ! empty( $hashtags ) ) {
+			$out .= "\n<p>" . esc_html( implode( ' ', $hashtags ) ) . "</p>\n";
+		}
+
 		return $out;
+	}
+
+	/**
+	 * Hashtags as the site expects them: "#Word", letters, digits and
+	 * underscores only, one per name regardless of case or accents, six at
+	 * most.
+	 *
+	 * @param string[] $hashtags From the draft.
+	 * @return string[]
+	 */
+	public static function clean_hashtags( array $hashtags ) {
+		$clean = array();
+		foreach ( $hashtags as $hashtag ) {
+			$word = preg_replace( '/[^\p{L}\p{N}_]+/u', '', (string) $hashtag );
+			$key  = sanitize_title( $word );
+			if ( '' !== $key && ! isset( $clean[ $key ] ) ) {
+				$clean[ $key ] = '#' . $word;
+			}
+		}
+		return array_slice( array_values( $clean ), 0, 6 );
+	}
+
+	/**
+	 * The hashtags the site's recent posts use most, in their usual
+	 * spelling, so the model reuses #SuzanneRoig instead of coining
+	 * #SuzanneRoigFuertes. Read from the body field's last line, where the
+	 * newsroom writes them.
+	 *
+	 * @param int $limit How many to return.
+	 * @return string[]
+	 */
+	public static function recent_hashtags( $limit = 60 ) {
+		$field = (string) YTWP_Settings::get( 'acf_body_field', '' );
+		if ( '' === $field ) {
+			return array();
+		}
+
+		$cache_key = 'ytwp_recent_hashtags_' . md5( $field );
+		$cached    = get_transient( $cache_key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$ids = get_posts(
+			array(
+				'post_type'      => 'post',
+				'post_status'    => 'publish',
+				'posts_per_page' => 200,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+
+		$counts    = array();
+		$spellings = array();
+		foreach ( $ids as $id ) {
+			$lines = preg_split( '/\R/u', trim( wp_strip_all_tags( (string) get_post_meta( $id, $field, true ) ) ) );
+			if ( ! preg_match_all( '/#([\p{L}\p{N}_]+)/u', (string) end( $lines ), $matches ) ) {
+				continue;
+			}
+			foreach ( $matches[1] as $word ) {
+				$key = sanitize_title( $word );
+				if ( '' === $key ) {
+					continue;
+				}
+				$counts[ $key ]               = ( isset( $counts[ $key ] ) ? $counts[ $key ] : 0 ) + 1;
+				$spellings[ $key ][ $word ] = ( isset( $spellings[ $key ][ $word ] ) ? $spellings[ $key ][ $word ] : 0 ) + 1;
+			}
+		}
+
+		arsort( $counts );
+		$recent = array();
+		foreach ( array_slice( array_keys( $counts ), 0, $limit ) as $key ) {
+			arsort( $spellings[ $key ] );
+			$recent[] = '#' . array_key_first( $spellings[ $key ] );
+		}
+
+		set_transient( $cache_key, $recent, HOUR_IN_SECONDS );
+		return $recent;
 	}
 
 	/**

@@ -133,6 +133,7 @@ class YTWP_Claude {
 			'key_points'   => isset( $input['key_points'] ) && is_array( $input['key_points'] ) ? $input['key_points'] : array(),
 			'sections'     => isset( $input['sections'] ) && is_array( $input['sections'] ) ? $input['sections'] : array(),
 			'sources'      => isset( $input['sources'] ) && is_array( $input['sources'] ) ? $input['sources'] : array(),
+			'hashtags'     => isset( $input['hashtags'] ) && is_array( $input['hashtags'] ) ? $input['hashtags'] : array(),
 			'excluded'     => isset( $input['excluded'] ) && is_array( $input['excluded'] ) ? $input['excluded'] : array(),
 			'needs_review' => isset( $input['needs_review'] ) && is_array( $input['needs_review'] ) ? $input['needs_review'] : array(),
 			// Absent means "nobody said otherwise", and treating that as a
@@ -157,7 +158,7 @@ class YTWP_Claude {
 			'input_schema' => array(
 				'type'                 => 'object',
 				'additionalProperties' => false,
-				'required'             => array( 'title', 'lede', 'key_points', 'sections', 'sources', 'excluded', 'needs_review', 'single_speaker', 'other_speakers' ),
+				'required'             => array( 'title', 'lede', 'key_points', 'sections', 'sources', 'hashtags', 'excluded', 'needs_review', 'single_speaker', 'other_speakers' ),
 				'properties'           => array(
 					'title'        => array(
 						'type'        => 'string',
@@ -206,6 +207,11 @@ class YTWP_Claude {
 								'url'    => array( 'type' => 'string' ),
 							),
 						),
+					),
+					'hashtags'     => array(
+						'type'        => 'array',
+						'description' => 'Three to six hashtags for the people, places and topics the article is about, each starting with #.',
+						'items'       => array( 'type' => 'string' ),
 					),
 					'excluded'     => array(
 						'type'        => 'array',
@@ -300,6 +306,7 @@ class YTWP_Claude {
 		$prompt .= "- key_points: four to six single sentences carrying the concrete figures and names.\n";
 		$prompt .= "- sections: the body, one per story.\n";
 		$prompt .= "- sources: the outlets credited. The video description usually lists each story with the outlet that reported it; use it for this and nothing else.\n";
+		$prompt .= "- hashtags: three to six, for the people, places and topics the article is mainly about, the way the outlet tags its posts: people and proper names in CamelCase without spaces (#JennifferGonzalez, #LUMA), everything else in lowercase without accents (#facturadeluz, #contratos). When the user message lists hashtags the outlet already uses and one fits, reuse it with exactly that spelling instead of inventing a variant. Never a hashtag for something only mentioned in passing.\n";
 		$prompt .= "- needs_review: what an editor must check before publishing. Names you could not resolve with confidence, figures that sound mistranscribed, and anything said about a named person.\n";
 		$prompt .= "- single_speaker and other_speakers: whether the journalist is the only person speaking. Set single_speaker to false the moment anyone else takes a turn - a guest, a co-host, a panel, someone being interviewed - and name them in other_speakers. Judge this from the transcript itself: someone being greeted by name and handed the floor, thanked for being there, or answering a question put to them. A name merely being discussed is not a second speaker. Fill these in honestly even when the article turned out well; what happens to the article afterwards is not your decision.\n\n";
 
@@ -340,6 +347,13 @@ class YTWP_Claude {
 				: 'TRANSCRIPT (hand-uploaded caption track):',
 			$transcript,
 		);
+
+		$in_use = YTWP_Publisher::recent_hashtags();
+		if ( ! empty( $in_use ) ) {
+			$lines[] = '';
+			$lines[] = 'HASHTAGS THE OUTLET ALREADY USES (reuse the exact spelling when one fits):';
+			$lines[] = implode( ' ', $in_use );
+		}
 
 		return implode( "\n", $lines );
 	}
